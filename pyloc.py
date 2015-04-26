@@ -10,16 +10,6 @@ from importlib import import_module
 import os
 
 
-def build_cli():
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument(
-        "name",
-        action="store",
-        help="A python qualified name.")
-    return parser
-
 def subnames(name):
     curname = ""
     names = []
@@ -55,6 +45,16 @@ def pyfile(name):
         if os.path.exists(py_path):
             return py_path
     return path
+
+def build_cli():
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        "name",
+        action="store",
+        help="A python qualified name.")
+    return parser
 
 def main(argv):
     cli = build_cli()

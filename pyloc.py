@@ -1,5 +1,7 @@
 # -*- encoding: utf-8 -*-
-"""Print the path to the file defining a given python qualified name.
+"""Prints the location of the definition a any python object in your file-system.
+
+Copyright (c) 2015, Nicolas Despres
 """
 
 

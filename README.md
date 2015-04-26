@@ -1,6 +1,7 @@
 # Welcome to pyloc
 
-_pyloc_ prints the location of a any python object on your file-system.
+_pyloc_ prints the location of the definition a any python object in
+your file-system.
 
 # Examples
 

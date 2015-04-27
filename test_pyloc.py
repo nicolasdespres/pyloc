@@ -22,6 +22,7 @@ from pyloc import AttributeNameError
 
 
 PLATSTDLIB_PATH = sysconfig.get_path('platstdlib')
+PY_VERSION = tuple(map(int, sysconfig.get_config_var('py_version').split(".")))
 
 @contextlib.contextmanager
 def save_sys_modules():
@@ -130,5 +131,8 @@ class TestPyloc(unittest.TestCase):
     def test_constant(self):
         self.assertLocEqual("subprocess.py", "subprocess", qualname="PIPE")
 
+    @unittest.skipIf(PY_VERSION >= (3, 0, 0), "test for python 2 only")
     def test_unicode(self):
-        self.assertLocEqual(u"subprocess.py", u"subprocess", qualname=u"PIPE")
+        self.assertLocEqual(unicode("subprocess.py"),
+                            unicode("subprocess"),
+                            qualname=unicode("PIPE"))

@@ -77,6 +77,10 @@ definition line number. So you may experienced problem like with:
 python -m pyloc -f human subprocess:Popen
 ```
 
+# Hacking
+
+See HACKING.md for details.
+
 # License
 
 _pyloc_ is released under the term of the

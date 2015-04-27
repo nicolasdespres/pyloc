@@ -126,16 +126,16 @@ def pyloc(target):
 DEFAULT_LOC_FORMAT = "emacs"
 
 def format_loc(filename, lineno, format=DEFAULT_LOC_FORMAT):
-    if format == 'emacs':
+    if format == 'emacs' or format == 'vi':
         s = ""
         if lineno:
             s += "+%d " %(lineno,)
         s += filename
         return s
-    elif format == 'vi':
-        s = filename
+    elif format == 'human':
+        s = "Filename: %s" %(filename,)
         if lineno:
-            s += ":%d" %(lineno,)
+            s += "\nLine: %d" %(lineno,)
         return s
     else:
         raise ValueError("unsupported format: {}".format(format))
@@ -163,7 +163,7 @@ def build_cli():
     parser.add_argument(
         "-f", "--format",
         action="store",
-        choices=("emacs", "vi"),
+        choices=("emacs", "vi", "human"),
         default=os.environ.get("PYLOC_DEFAULT_FORMAT", DEFAULT_LOC_FORMAT),
         help="How to write object location")
     parser.add_argument(

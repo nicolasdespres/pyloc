@@ -53,7 +53,7 @@ def pyloc(target):
     ### Try to import the module containing the given target.
     try:
         obj = module = importlib.import_module(mod_name)
-    except Exception as exc:
+    except ImportError as exc:
         raise ModuleNameError(mod_name, exc)
     ### Get the object in module
     if has_attrs_name:

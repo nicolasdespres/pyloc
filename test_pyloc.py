@@ -9,6 +9,8 @@ import sys
 import os
 import contextlib
 import re
+import textwrap
+import tempfile
 
 from pyloc import pyloc
 from pyloc import ModuleNameError
@@ -42,6 +44,28 @@ def get_line(filename, lineno):
         for i, line in enumerate(f):
             if i + 1 == lineno:
                 return line
+
+def gen_fixture_in(spec, dirpath):
+    for k in spec:
+        v = spec[k]
+        subpath = os.path.join(dirpath, k)
+        if isinstance(v, dict):
+            os.mkdir(subpath)
+            with open(os.path.join(subpath, "__init__.py"), "w") as stream:
+                stream.write("# -*- encoding: utf-8 -*-\n")
+                stream.write("\"\"\"generated package\n\"\"\"")
+            gen_fixture_in(v, subpath)
+        else:
+            with open(subpath+".py", "w") as stream:
+                stream.write(v)
+
+@contextlib.contextmanager
+def fixture(spec):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with save_sys_modules():
+            sys.path.insert(0, tmpdir)
+            gen_fixture_in(spec, tmpdir)
+            yield
 
 class TestPyloc(unittest.TestCase):
 
@@ -78,6 +102,16 @@ class TestPyloc(unittest.TestCase):
     def test_module_name_error(self):
         with self.assertRaises(ModuleNameError):
             pyloc("list")
+
+    def test_report_exception_raised_from_imported_module(self):
+        modcontent = textwrap.dedent(
+            """
+            raise RuntimeError("intentional error")
+            """)
+        with fixture({"pyloc_mymod":modcontent}):
+            with self.assertRaises(RuntimeError) as cm:
+                pyloc("pyloc_mymod")
+            self.assertRegexp(str(cm.exception), "intentional error")
 
     def test_attribute_name_error(self):
         with self.assertRaises(AttributeNameError) as cm:

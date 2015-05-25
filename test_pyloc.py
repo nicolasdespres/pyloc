@@ -244,6 +244,36 @@ class TestPyloc(unittest.TestCase):
                                  qualname="Foo.meth",
                                  line=2)
 
+    def test_nested_method(self):
+        modcontent = textwrap.dedent(
+            """\
+            def meth():
+                pass
+            class Bar(object):
+                def meth(self):
+                    pass
+            class Foo(object):
+                def meth(self):
+                    pass
+            class A(object):
+                class B(object):
+                    def meth(self):
+                        pass
+            """)
+        with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo.meth",
+                                 line=7)
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Bar.meth",
+                                 line=4)
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="A.B.meth",
+                                 line=11)
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="meth",
+                                 line=1)
+
     def test_constant(self):
         modcontent = textwrap.dedent(
             """\

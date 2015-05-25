@@ -167,6 +167,12 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testpkg/utils.py",
                                  "pyloc_testpkg.utils")
 
+    def test_module_in_module(self):
+        spec = {"pyloc_testmod":"import sys"}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py",
+                                 "pyloc_testmod", qualname="sys")
+
     def test_function_in_module_in_package(self):
         spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
         with self.fixture(spec) as fctxt:

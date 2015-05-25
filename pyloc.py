@@ -57,6 +57,17 @@ class _ClassDefVisitor(ast.NodeVisitor):
         self.path.pop()
         return retval
 
+def _get_file_content(filename):
+    with open(filename) as f:
+        return f.read()
+
+def _search_classdef(filename, qualname):
+    source = _get_file_content(filename)
+    root_node = ast.parse(source, filename)
+    visitor = _ClassDefVisitor(qualname)
+    visitor.visit(root_node)
+    return visitor.candidates
+
 def _iter_class_methods(obj):
     for attr in dir(obj):
         val = getattr(obj, attr)
@@ -141,22 +152,18 @@ def pyloc(target):
         # make some effort to find the best matching class definition:
         # use the one with the least indentation, which is the one
         # that's most probably not inside a function definition.
-        with open(filename) as f:
-            source = f.read()
-        root_node = ast.parse(source, filename)
-        visitor = _ClassDefVisitor(attrs_name)
-        node = visitor.visit(root_node)
-        if visitor.candidates:
-            if len(visitor.candidates) > 1:
+        candidates = _search_classdef(filename, attrs_name)
+        if candidates:
+            if len(candidates) > 1:
                 # Try to disambiguite by locating the method defined in the
                 # class.
-                candidate = _disamb_class_loc(visitor.candidates, obj)
+                candidate = _disamb_class_loc(candidates, obj)
                 if candidate is not None:
                     return [Location(filename,
                                      candidate.lineno,
                                      candidate.col_offset)]
             return sorted([Location(filename, c.lineno, c.col_offset)
-                           for c in visitor.candidates])
+                           for c in candidates])
         return [Location(filename, node.lineno, node.col_offset)]
     return [Location(filename, _get_line(obj), None)]
 

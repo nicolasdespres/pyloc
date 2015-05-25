@@ -11,6 +11,7 @@ import inspect
 import re
 import os
 from textwrap import dedent
+import ast
 
 
 class PylocError(Exception):
@@ -36,6 +37,16 @@ class AttributeNameError(PylocError):
 
     def __str__(self):
         return "cannot get attribute '%s' from '%s'" %(self.name, self.prefix)
+
+class _ClassDefVisitor(ast.NodeVisitor):
+
+    def __init__(self, classname):
+        self.classname = classname
+        self.candidates = []
+
+    def visit_ClassDef(self, node):
+        if node.name == self.classname:
+            self.candidates.append((node.col_offset, node))
 
 def pyloc(target):
     """Return (filename, lineno) defining object named "module[:qualname]".
@@ -83,28 +94,20 @@ def pyloc(target):
         return filename, None
     if inspect.isclass(obj):
         name = obj.__name__
-        pat = re.compile(r'^(\s*)class\s*' + name + r'\b')
         # make some effort to find the best matching class definition:
         # use the one with the least indentation, which is the one
         # that's most probably not inside a function definition.
-        candidates = []
         with open(filename) as f:
-            for i, line in enumerate(f):
-                lineno = i + 1
-                match = pat.match(line)
-                if match:
-                    # if it's at toplevel, it's already the best one
-                    if line[0] == 'c':
-                        return filename, lineno
-                    # else add whitespace to candidate list
-                    candidates.append((match.group(1), lineno))
-        if candidates:
-            # this will sort by whitespace, and by line number,
-            # less whitespace first
-            candidates.sort()
-            return filename, candidates[0][1]
-        else:
+            source = f.read()
+        node = ast.parse(source, filename)
+        if not isinstance(node, ast.Module):
             return filename, None
+        visitor = _ClassDefVisitor(name)
+        visitor.visit(node)
+        if visitor.candidates:
+            visitor.candidates.sort()
+            return filename, visitor.candidates[0][1].lineno
+        return filename, None
     if inspect.ismethod(obj):
         obj = obj.__func__
     if inspect.isfunction(obj):

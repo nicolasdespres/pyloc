@@ -180,6 +180,43 @@ class TestPyloc(unittest.TestCase):
                                  qualname="Foo",
                                  line=1)
 
+    def test_class_robust_comment(self):
+        modcontent = textwrap.dedent(
+            """\
+            # -*- encoding: utf-8 -*-
+            # This module defines the class called Foo:
+            #
+            # class Foo()
+            #
+
+            class Foo(object):
+                pass
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo",
+                                 line=7)
+
+    def test_class_robust_docstring(self):
+        modcontent = textwrap.dedent(
+            """\
+            # -*- encoding: utf-8 -*-
+            \"\"\"
+            This module defines the class called Foo:
+
+            class Foo()
+            \"\"\"
+
+            class Foo(object):
+                pass
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo",
+                                 line=8)
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

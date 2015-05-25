@@ -9,6 +9,12 @@ All commands must be executed from the root of the repository.
 python -m unittest test_pyloc
 ```
 
+or
+
+```sh
+nosetests
+```
+
 If you are using [pyenv](https://github.com/yyuu/pyenv), you can run
 the test suite against several version of python like this:
 

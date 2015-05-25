@@ -11,6 +11,7 @@ import contextlib
 import re
 import textwrap
 import tempfile
+import shutil
 
 from pyloc import pyloc
 from pyloc import ModuleNameError
@@ -18,9 +19,10 @@ from pyloc import AttributeNameError
 
 
 # Guidelines:
-# - Use only fixture names that are part of the standard library for all
-#   supported version of Python and that are not imported by either this
-#   module and pyloc.
+# - Generate the package/module fixture for testing.
+# - If you cannot, use only fixture names that are part of the standard
+#   library for all supported version of Python and that are not imported
+#   by either this module and pyloc.
 
 
 PLATSTDLIB_PATH = sysconfig.get_path('platstdlib')
@@ -60,12 +62,25 @@ def gen_fixture_in(spec, dirpath):
                 stream.write(v)
 
 @contextlib.contextmanager
-def fixture(spec):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with save_sys_modules():
-            sys.path.insert(0, tmpdir)
-            gen_fixture_in(spec, tmpdir)
-            yield
+def make_tmpdir(*args, **kwargs):
+    """Make temporary directory.
+
+    Needed because tempfile.TemporaryDirectory is Python3 only.
+    """
+    try:
+        tmpdir = tempfile.mkdtemp(*args, **kwargs)
+        yield tmpdir
+    finally:
+        shutil.rmtree(tmpdir)
+
+class FixtureCtxt(object):
+
+    def __init__(self, testcase, tmpdir):
+        self.testcase = testcase
+        self.tmpdir = tmpdir
+
+    def assertLocEqual(self, *args, **kwargs):
+        self.testcase.assertLocEqual(self.tmpdir, *args, **kwargs)
 
 class TestPyloc(unittest.TestCase):
 
@@ -80,7 +95,7 @@ class TestPyloc(unittest.TestCase):
             msg = '%s: %r not found in %r' % (msg, expected_regex.pattern, text)
             raise self.failureException(msg)
 
-    def assertLocEqual(self, expected, modname, qualname=None,
+    def assertLocEqual(self, rootdir, expected, modname, qualname=None,
                        match_line=None):
         self.assertFalse(modname in sys.modules,
                          "'%s' is already imported" % (modname,))
@@ -88,7 +103,7 @@ class TestPyloc(unittest.TestCase):
         if qualname:
             fullname += ":" + qualname
         if not os.path.isabs(expected):
-            expected = os.path.join(PLATSTDLIB_PATH, expected)
+            expected = os.path.join(rootdir, expected)
         with save_sys_modules():
             filename, lineno = pyloc(fullname)
         if match_line is not None:
@@ -99,6 +114,14 @@ class TestPyloc(unittest.TestCase):
                               r"^\s*{}\s+[_a-zA-Z]+".format(match_line))
         self.assertEqual(expected, filename)
 
+    @contextlib.contextmanager
+    def fixture(self, spec):
+        with make_tmpdir() as tmpdir, \
+             save_sys_modules():
+            sys.path.insert(0, tmpdir)
+            gen_fixture_in(spec, tmpdir)
+            yield FixtureCtxt(self, tmpdir)
+
     def test_module_name_error(self):
         with self.assertRaises(ModuleNameError):
             pyloc("list")
@@ -108,65 +131,94 @@ class TestPyloc(unittest.TestCase):
             """
             raise RuntimeError("intentional error")
             """)
-        with fixture({"pyloc_mymod":modcontent}):
+        with self.fixture({"pyloc_mymod":modcontent}):
             with self.assertRaises(RuntimeError) as cm:
                 pyloc("pyloc_mymod")
             self.assertRegexp(str(cm.exception), "intentional error")
 
     def test_attribute_name_error(self):
         with self.assertRaises(AttributeNameError) as cm:
-            with save_sys_modules():
-                pyloc("subprocess:doesnotexist")
+            pyloc("subprocess:doesnotexist")
         self.assertRegexp(str(cm.exception),
                           r"'doesnotexist'.+'subprocess'")
 
     def test_sub_attribute_name_error(self):
         with self.assertRaises(AttributeNameError) as cm:
-            with save_sys_modules():
-                pyloc("subprocess:Popen.doesnotexist")
+            pyloc("subprocess:Popen.doesnotexist")
         self.assertRegexp(str(cm.exception),
                           r"'doesnotexist'.+'subprocess.Popen'")
 
 
     def test_package(self):
-        self.assertLocEqual("email/__init__.py", "email")
+        spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/__init__.py", "pyloc_testpkg")
 
     def test_no_source_file(self):
         filename = os.path.join(sysconfig.get_config_var("DESTSHARED"),
-                                "zlib.so")
-        self.assertLocEqual(filename, "zlib")
+                                "mmap.so")
+        self.assertLocEqual(PLATSTDLIB_PATH, filename, "mmap")
 
     def test_module(self):
-        self.assertLocEqual("subprocess.py", "subprocess")
+        with self.fixture({"pyloc_testmod":""}) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod")
 
     def test_module_in_package(self):
-        self.assertLocEqual("email/utils.py", "email.utils")
+        spec = {"pyloc_testpkg":{"utils":""}}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/utils.py",
+                                 "pyloc_testpkg.utils")
 
     def test_function_in_module_in_package(self):
-        self.assertLocEqual("email/utils.py", "email.utils",
-                            qualname="formataddr",
-                            match_line='def')
+        spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/utils.py",
+                                 "pyloc_testpkg.utils",
+                                 qualname="func",
+                                 match_line='def')
 
     def test_function_in_module(self):
-        self.assertLocEqual("subprocess.py", "subprocess",
-                            qualname="check_output",
-                            match_line='def')
+        spec = {"pyloc_testmod":"def func(): pass"}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="func",
+                                 match_line='def')
 
     def test_class(self):
-        self.assertLocEqual("subprocess.py", "subprocess",
-                            qualname="Popen",
-                            match_line='class')
+        spec = {"pyloc_testmod":"class Foo(object): pass"}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo",
+                                 match_line='class')
 
     def test_method(self):
-        self.assertLocEqual("subprocess.py", "subprocess",
-                            qualname="Popen.wait",
-                            match_line='def')
+        modcontent = textwrap.dedent(
+            """
+            class Foo(object):
+                def meth(self):
+                    pass
+            """)
+        with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo.meth",
+                                 match_line='def')
 
     def test_constant(self):
-        self.assertLocEqual("subprocess.py", "subprocess", qualname="PIPE")
+        modcontent = textwrap.dedent(
+            """
+            PI = 3.14
+            """)
+        with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="PI")
 
     @unittest.skipIf(PY_VERSION >= (3, 0, 0), "test for python 2 only")
     def test_unicode(self):
-        self.assertLocEqual(unicode("subprocess.py"),
-                            unicode("subprocess"),
-                            qualname=unicode("PIPE"))
+        modcontent = textwrap.dedent(
+            """
+            PI = 3.14
+            """)
+        with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
+            fctxt.assertLocEqual(unicode("pyloc_testmod.py"),
+                                 unicode("pyloc_testmod"),
+                                 qualname=unicode("PI"))

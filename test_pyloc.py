@@ -217,6 +217,21 @@ class TestPyloc(unittest.TestCase):
                                  qualname="Foo",
                                  line=8)
 
+    def test_nested_class(self):
+        modcontent = textwrap.dedent(
+            """\
+            # -*- encoding: utf-8 -*-
+            class Foo(object):
+                class Foo(object):
+                    class Foo(object):
+                        pass
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Foo.Foo.Foo",
+                                 line=4)
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

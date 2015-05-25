@@ -42,11 +42,16 @@ class _ClassDefVisitor(ast.NodeVisitor):
 
     def __init__(self, classname):
         self.classname = classname
-        self.candidates = []
+        self.candidates = {}
+        self.path = []
 
     def visit_ClassDef(self, node):
+        self.path.append(node)
         if node.name == self.classname:
-            self.candidates.append((node.col_offset, node))
+            self.candidates[".".join(n.name for n in self.path)] = node
+        retval = self.generic_visit(node)
+        self.path.pop()
+        return retval
 
 def pyloc(target):
     """Return (filename, lineno) defining object named "module[:qualname]".
@@ -99,15 +104,15 @@ def pyloc(target):
         # that's most probably not inside a function definition.
         with open(filename) as f:
             source = f.read()
-        node = ast.parse(source, filename)
-        if not isinstance(node, ast.Module):
-            return filename, None
+        root_node = ast.parse(source, filename)
         visitor = _ClassDefVisitor(name)
-        visitor.visit(node)
-        if visitor.candidates:
-            visitor.candidates.sort()
-            return filename, visitor.candidates[0][1].lineno
-        return filename, None
+        visitor.visit(root_node)
+        try:
+            node = visitor.candidates[attrs_name]
+        except KeyError:
+            return filename, None
+        else:
+            return filename, node.lineno
     if inspect.ismethod(obj):
         obj = obj.__func__
     if inspect.isfunction(obj):

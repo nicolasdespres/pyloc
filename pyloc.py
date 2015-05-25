@@ -164,7 +164,7 @@ def pyloc(target):
                                      candidate.col_offset)]
             return sorted([Location(filename, c.lineno, c.col_offset)
                            for c in candidates])
-        return [Location(filename, node.lineno, node.col_offset)]
+        return [Location(filename, None, None)]
     return [Location(filename, _get_line(obj), None)]
 
 # =============================== #

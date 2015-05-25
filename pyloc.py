@@ -115,15 +115,15 @@ def pyloc(target):
     """
     if not target:
         raise ValueError("target must be a non-empty string")
-    mod_name, has_attrs_name, attrs_name = target.partition(":")
+    mod_name, has_qualname, qualname = target.partition(":")
     ### Try to import the module containing the given target.
     try:
         obj = module = importlib.import_module(mod_name)
     except ImportError as exc:
         raise ModuleNameError(mod_name, exc)
     ### Get the object in module
-    if has_attrs_name:
-        attrs = attrs_name.split(".")
+    if has_qualname:
+        attrs = qualname.split(".")
         for i in range(len(attrs)):
             attr = attrs[i]
             try:
@@ -148,11 +148,11 @@ def pyloc(target):
     if inspect.ismodule(obj):
         return [Location(filename, None, None)]
     if inspect.isclass(obj):
-        assert has_attrs_name
+        assert has_qualname
         # make some effort to find the best matching class definition:
         # use the one with the least indentation, which is the one
         # that's most probably not inside a function definition.
-        candidates = _search_classdef(filename, attrs_name)
+        candidates = _search_classdef(filename, qualname)
         if candidates:
             if len(candidates) > 1:
                 # Try to disambiguite by locating the method defined in the

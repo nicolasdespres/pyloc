@@ -116,6 +116,13 @@ def _get_node_name(node):
         raise ValueError("do not know how to get name of node: {!r}"
                          .format(node))
 
+def _iter_assigned_names(node):
+    assert isinstance(node, ast.Assign)
+    for target in node.targets:
+        for n in ast.walk(target):
+            if isinstance(n, ast.Name):
+                yield n
+
 class _AssignVisitor(ast.NodeVisitor):
 
     def __init__(self, qualname):
@@ -130,8 +137,9 @@ class _AssignVisitor(ast.NodeVisitor):
         return retval
 
     def visit_Assign(self, node):
-        for target in node.targets:
-            qualname = ".".join(_get_node_name(n) for n in self.path+[target])
+        for name_node in _iter_assigned_names(node):
+            qualname = ".".join(_get_node_name(n)
+                                for n in self.path+[name_node])
             if qualname == self.qualname:
                 self.candidates.append(node)
 

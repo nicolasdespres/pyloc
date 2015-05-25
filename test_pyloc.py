@@ -430,6 +430,19 @@ class TestPyloc(unittest.TestCase):
                                  qualname="D",
                                  locs=[(3, 0),(4,0)])
 
+    def test_class_multiple_assignment(self):
+        modcontent = textwrap.dedent(
+            """\
+            class C(object):
+                D = 42
+            _, D = (1, C)
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="D",
+                                 locs=(3, 0))
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

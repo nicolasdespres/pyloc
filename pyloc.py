@@ -103,6 +103,49 @@ def _disamb_class_loc(candidates, obj):
                 best_candidate = c
     return best_candidate
 
+def _candidate_nodes_to_locations(filename, candidates):
+    return sorted([Location(filename, c.lineno, c.col_offset)
+                   for c in candidates])
+
+def _get_node_name(node):
+    if hasattr(node, "name"):
+        return node.name
+    elif hasattr(node, "id"):
+        return node.id
+    else:
+        raise ValueError("do not know how to get name of node: {!r}"
+                         .format(node))
+
+class _AssignVisitor(ast.NodeVisitor):
+
+    def __init__(self, qualname):
+        self.qualname = qualname
+        self.candidates = []
+        self.path = []
+
+    def visit_ClassDef(self, node):
+        self.path.append(node)
+        retval = self.generic_visit(node)
+        self.path.pop()
+        return retval
+
+    def visit_Assign(self, node):
+        for target in node.targets:
+            qualname = ".".join(_get_node_name(n) for n in self.path+[target])
+            if qualname == self.qualname:
+                self.candidates.append(node)
+
+    def visit_FunctionDef(self, node):
+        # Do not descend into FunctionDef
+        pass
+
+def _search_assign(filename, qualname):
+    source = _get_file_content(filename)
+    root_node = ast.parse(source, filename)
+    visitor = _AssignVisitor(qualname)
+    visitor.visit(root_node)
+    return visitor.candidates
+
 def pyloc(target):
     """Return (filename, lineno) defining object named "module[:qualname]".
 
@@ -152,9 +195,7 @@ def pyloc(target):
         return [Location(filename, None, None)]
     if inspect.isclass(obj):
         assert has_qualname
-        # make some effort to find the best matching class definition:
-        # use the one with the least indentation, which is the one
-        # that's most probably not inside a function definition.
+        ### Search for ClassDef node in AST.
         candidates = _search_classdef(filename, obj_qualname)
         if candidates:
             if len(candidates) > 1:
@@ -165,8 +206,11 @@ def pyloc(target):
                     return [Location(filename,
                                      candidate.lineno,
                                      candidate.col_offset)]
-            return sorted([Location(filename, c.lineno, c.col_offset)
-                           for c in candidates])
+            return _candidate_nodes_to_locations(filename, candidates)
+        ### Search for Assign node in AST
+        candidates = _search_assign(filename, obj_qualname)
+        if candidates:
+            return _candidate_nodes_to_locations(filename, candidates)
         return [Location(filename, None, None)]
     return [Location(filename, _get_line(obj), None)]
 

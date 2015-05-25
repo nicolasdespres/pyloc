@@ -360,6 +360,47 @@ class TestPyloc(unittest.TestCase):
                                  qualname="Foo.Foo.Foo",
                                  locs=(4, 8))
 
+    def test_class_namedtuple(self):
+        modcontent = textwrap.dedent(
+            """\
+            from collections import namedtuple
+            Point = namedtuple("Point", "x y")
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="Point",
+                                 locs=(2, 0))
+
+    def test_class_nested_namedtuple(self):
+        modcontent = textwrap.dedent(
+            """\
+            from collections import namedtuple
+            class C(object):
+                Point = namedtuple("Point", "x y")
+            Point = C.Point(1, 2)
+            def f():
+                Point = C.Point(2, 3)
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="C.Point",
+                                 locs=(3, 4))
+
+    def test_class_nested_namedtuple(self):
+        modcontent = textwrap.dedent(
+            """\
+            from collections import namedtuple
+            class C(object):
+                Point = namedtuple("Point", "x y")
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="C.Point",
+                                 locs=(3, 4))
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

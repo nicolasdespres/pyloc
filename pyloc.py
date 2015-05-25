@@ -57,6 +57,41 @@ class _ClassDefVisitor(ast.NodeVisitor):
         self.path.pop()
         return retval
 
+def _iter_class_methods(obj):
+    for attr in dir(obj):
+        val = getattr(obj, attr)
+        if inspect.isfunction(val) or inspect.ismethod(val):
+            yield val
+
+def _get_line(obj):
+    if inspect.ismethod(obj):
+        obj = obj.__func__
+    if inspect.isfunction(obj):
+        obj = obj.__code__
+    if inspect.istraceback(obj):
+        obj = obj.tb_frame
+    if inspect.isframe(obj):
+        obj = obj.f_code
+    if inspect.iscode(obj) and hasattr(obj, 'co_firstlineno'):
+        return obj.co_firstlineno
+    return None
+
+def _disamb_class_loc(candidates, obj):
+    methods = list(_iter_class_methods(obj))
+    if not methods:
+        return
+    meth_line = min(_get_line(m) for m in methods)
+    best_candidate = None
+    best_dist = None
+    # Select the closest candidates coming before the first method definition
+    for c in candidates:
+        if c.lineno < meth_line: # Must come before
+            dist = meth_line - c.lineno
+            if best_dist is None or best_dist > dist:
+                best_dist = dist
+                best_candidate = c
+    return best_candidate
+
 def pyloc(target):
     """Return (filename, lineno) defining object named "module[:qualname]".
 
@@ -112,22 +147,16 @@ def pyloc(target):
         visitor = _ClassDefVisitor(attrs_name)
         visitor.visit(root_node)
         if visitor.candidates:
+            if len(visitor.candidates) > 1:
+                # Try to disambiguite by locating the method defined in the
+                # class.
+                candidate = _disamb_class_loc(visitor.candidates, obj)
+                if candidate is not None:
+                    return [Location(filename, candidate.lineno, None)]
             return sorted([Location(filename, c.lineno, None)
                            for c in visitor.candidates])
         return [Location(filename, node.lineno, None)]
-    if inspect.ismethod(obj):
-        obj = obj.__func__
-    if inspect.isfunction(obj):
-        obj = obj.__code__
-    if inspect.istraceback(obj):
-        obj = obj.tb_frame
-    if inspect.isframe(obj):
-        obj = obj.f_code
-    if inspect.iscode(obj):
-        if not hasattr(obj, 'co_firstlineno'):
-            return [Location(filename, None, None)]
-        return [Location(filename, obj.co_firstlineno, None)]
-    return [Location(filename, None, None)]
+    return [Location(filename, _get_line(obj), None)]
 
 # =============================== #
 # Command line interface function #

@@ -225,6 +225,26 @@ class TestPyloc(unittest.TestCase):
                                      qualname="C",
                                      locs=[(3, None), (6, None)])
 
+    def test_multiple_classes_disamb(self):
+        for cond, loc in ((True, (3, None)), (False, (7, None))):
+            modcontent = textwrap.dedent(
+                """\
+                cond = {cond}
+                if cond:
+                    class C(object):
+                        def m():
+                            pass
+                else:
+                    class C(object):
+                        def m():
+                            pass
+                """.format(cond=cond))
+            spec = {"pyloc_testmod":modcontent}
+            with self.fixture(spec) as fctxt:
+                fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                     qualname="C",
+                                     locs=loc)
+
     def test_class_robust_comment(self):
         modcontent = textwrap.dedent(
             """\

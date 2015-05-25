@@ -41,12 +41,6 @@ def save_sys_modules():
         for k in to_del:
             del sys.modules[k]
 
-def get_line(filename, lineno):
-    with open(filename) as f:
-        for i, line in enumerate(f):
-            if i + 1 == lineno:
-                return line
-
 def gen_fixture_in(spec, dirpath):
     for k in spec:
         v = spec[k]
@@ -96,7 +90,7 @@ class TestPyloc(unittest.TestCase):
             raise self.failureException(msg)
 
     def assertLocEqual(self, rootdir, expected, modname, qualname=None,
-                       match_line=None):
+                       line=None):
         self.assertFalse(modname in sys.modules,
                          "'%s' is already imported" % (modname,))
         fullname = modname
@@ -106,12 +100,7 @@ class TestPyloc(unittest.TestCase):
             expected = os.path.join(rootdir, expected)
         with save_sys_modules():
             filename, lineno = pyloc(fullname)
-        if match_line is not None:
-            self.assertIsInstance(lineno, int)
-            self.assertIsNotNone(lineno, filename)
-            line = get_line(filename, lineno)
-            self.assertRegexp(line,
-                              r"^\s*{}\s+[_a-zA-Z]+".format(match_line))
+        self.assertEqual(line, lineno)
         self.assertEqual(expected, filename)
 
     @contextlib.contextmanager
@@ -128,7 +117,7 @@ class TestPyloc(unittest.TestCase):
 
     def test_report_exception_raised_from_imported_module(self):
         modcontent = textwrap.dedent(
-            """
+            """\
             raise RuntimeError("intentional error")
             """)
         with self.fixture({"pyloc_mymod":modcontent}):
@@ -175,25 +164,25 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testpkg/utils.py",
                                  "pyloc_testpkg.utils",
                                  qualname="func",
-                                 match_line='def')
+                                 line=1)
 
     def test_function_in_module(self):
         spec = {"pyloc_testmod":"def func(): pass"}
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="func",
-                                 match_line='def')
+                                 line=1)
 
     def test_class(self):
         spec = {"pyloc_testmod":"class Foo(object): pass"}
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 match_line='class')
+                                 line=1)
 
     def test_method(self):
         modcontent = textwrap.dedent(
-            """
+            """\
             class Foo(object):
                 def meth(self):
                     pass
@@ -201,11 +190,11 @@ class TestPyloc(unittest.TestCase):
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo.meth",
-                                 match_line='def')
+                                 line=2)
 
     def test_constant(self):
         modcontent = textwrap.dedent(
-            """
+            """\
             PI = 3.14
             """)
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
@@ -215,7 +204,7 @@ class TestPyloc(unittest.TestCase):
     @unittest.skipIf(PY_VERSION >= (3, 0, 0), "test for python 2 only")
     def test_unicode(self):
         modcontent = textwrap.dedent(
-            """
+            """\
             PI = 3.14
             """)
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:

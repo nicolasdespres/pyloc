@@ -205,7 +205,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 locs=1)
+                                 locs=(1, 0))
 
     def test_multiple_classes(self):
         for cond in (True, False):
@@ -223,10 +223,10 @@ class TestPyloc(unittest.TestCase):
             with self.fixture(spec) as fctxt:
                 fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                      qualname="C",
-                                     locs=[(3, None), (6, None)])
+                                     locs=[(3, 4), (6, 4)])
 
     def test_multiple_classes_disamb(self):
-        for cond, loc in ((True, (3, None)), (False, (7, None))):
+        for cond, loc in ((True, (3, 4)), (False, (7, 4))):
             modcontent = textwrap.dedent(
                 """\
                 cond = {cond}
@@ -261,7 +261,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 locs=7)
+                                 locs=(7, 0))
 
     def test_class_robust_docstring(self):
         modcontent = textwrap.dedent(
@@ -280,7 +280,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 locs=8)
+                                 locs=(8, 0))
 
     def test_nested_class(self):
         modcontent = textwrap.dedent(
@@ -295,7 +295,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo.Foo.Foo",
-                                 locs=4)
+                                 locs=(4, 8))
 
     def test_method(self):
         modcontent = textwrap.dedent(

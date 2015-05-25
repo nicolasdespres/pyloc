@@ -145,17 +145,19 @@ def pyloc(target):
             source = f.read()
         root_node = ast.parse(source, filename)
         visitor = _ClassDefVisitor(attrs_name)
-        visitor.visit(root_node)
+        node = visitor.visit(root_node)
         if visitor.candidates:
             if len(visitor.candidates) > 1:
                 # Try to disambiguite by locating the method defined in the
                 # class.
                 candidate = _disamb_class_loc(visitor.candidates, obj)
                 if candidate is not None:
-                    return [Location(filename, candidate.lineno, None)]
-            return sorted([Location(filename, c.lineno, None)
+                    return [Location(filename,
+                                     candidate.lineno,
+                                     candidate.col_offset)]
+            return sorted([Location(filename, c.lineno, c.col_offset)
                            for c in visitor.candidates])
-        return [Location(filename, node.lineno, None)]
+        return [Location(filename, node.lineno, node.col_offset)]
     return [Location(filename, _get_line(obj), None)]
 
 # =============================== #

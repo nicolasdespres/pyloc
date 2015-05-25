@@ -43,15 +43,16 @@ Location = namedtuple('Location', 'filename line column')
 
 class _ClassDefVisitor(ast.NodeVisitor):
 
-    def __init__(self, classname):
-        self.classname = classname
-        self.candidates = {}
+    def __init__(self, qualname):
+        self.qualname = qualname
+        self.candidates = []
         self.path = []
 
     def visit_ClassDef(self, node):
         self.path.append(node)
-        if node.name == self.classname:
-            self.candidates[".".join(n.name for n in self.path)] = node
+        qualname = ".".join(n.name for n in self.path)
+        if qualname == self.qualname:
+            self.candidates.append(node)
         retval = self.generic_visit(node)
         self.path.pop()
         return retval
@@ -101,21 +102,19 @@ def pyloc(target):
     if inspect.ismodule(obj):
         return [Location(filename, None, None)]
     if inspect.isclass(obj):
-        name = obj.__name__
+        assert has_attrs_name
         # make some effort to find the best matching class definition:
         # use the one with the least indentation, which is the one
         # that's most probably not inside a function definition.
         with open(filename) as f:
             source = f.read()
         root_node = ast.parse(source, filename)
-        visitor = _ClassDefVisitor(name)
+        visitor = _ClassDefVisitor(attrs_name)
         visitor.visit(root_node)
-        try:
-            node = visitor.candidates[attrs_name]
-        except KeyError:
-            return [Location(filename, None, None)]
-        else:
-            return [Location(filename, node.lineno, None)]
+        if visitor.candidates:
+            return sorted([Location(filename, c.lineno, None)
+                           for c in visitor.candidates])
+        return [Location(filename, node.lineno, None)]
     if inspect.ismethod(obj):
         obj = obj.__func__
     if inspect.isfunction(obj):

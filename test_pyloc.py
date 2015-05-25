@@ -200,6 +200,51 @@ class TestPyloc(unittest.TestCase):
                                      qualname="f",
                                      locs=loc)
 
+    def test_follow_aliases(self):
+        modcontent = textwrap.dedent(
+            """\
+            def realf():
+                pass
+            f = realf
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="f",
+                                 locs=1)
+
+    def test_closure(self):
+        modcontent = textwrap.dedent(
+            """\
+            def realf():
+                def f():
+                    pass
+                return f
+            func = realf()
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="func",
+                                 locs=2)
+
+    def test_setattr(self):
+        modcontent = textwrap.dedent(
+            """\
+            import sys
+            def realf():
+                def f():
+                    pass
+                return f
+            this_module = sys.modules[__name__]
+            setattr(this_module, "func", realf())
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="func",
+                                 locs=3)
+
     def test_class(self):
         spec = {"pyloc_testmod":"class Foo(object): pass"}
         with self.fixture(spec) as fctxt:

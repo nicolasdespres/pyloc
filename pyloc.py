@@ -12,6 +12,7 @@ import re
 import os
 from textwrap import dedent
 import ast
+from collections import namedtuple
 
 
 class PylocError(Exception):
@@ -37,6 +38,8 @@ class AttributeNameError(PylocError):
 
     def __str__(self):
         return "cannot get attribute '%s' from '%s'" %(self.name, self.prefix)
+
+Location = namedtuple('Location', 'filename line column')
 
 class _ClassDefVisitor(ast.NodeVisitor):
 
@@ -94,9 +97,9 @@ def pyloc(target):
     ### Get location
     filename = inspect.getsourcefile(obj)
     if not filename:
-        return inspect.getfile(obj), None
+        return [Location(inspect.getfile(obj), None, None)]
     if inspect.ismodule(obj):
-        return filename, None
+        return [Location(filename, None, None)]
     if inspect.isclass(obj):
         name = obj.__name__
         # make some effort to find the best matching class definition:
@@ -110,9 +113,9 @@ def pyloc(target):
         try:
             node = visitor.candidates[attrs_name]
         except KeyError:
-            return filename, None
+            return [Location(filename, None, None)]
         else:
-            return filename, node.lineno
+            return [Location(filename, node.lineno, None)]
     if inspect.ismethod(obj):
         obj = obj.__func__
     if inspect.isfunction(obj):
@@ -123,9 +126,9 @@ def pyloc(target):
         obj = obj.f_code
     if inspect.iscode(obj):
         if not hasattr(obj, 'co_firstlineno'):
-            return filename, None
-        return filename, obj.co_firstlineno
-    return filename, None
+            return [Location(filename, None, None)]
+        return [Location(filename, obj.co_firstlineno, None)]
+    return [Location(filename, None, None)]
 
 # =============================== #
 # Command line interface function #
@@ -133,17 +136,23 @@ def pyloc(target):
 
 DEFAULT_LOC_FORMAT = "emacs"
 
-def format_loc(filename, lineno, format=DEFAULT_LOC_FORMAT):
+def format_loc(loc, format=DEFAULT_LOC_FORMAT):
     if format == 'emacs' or format == 'vi':
         s = ""
-        if lineno:
-            s += "+%d " %(lineno,)
-        s += filename
+        if loc.line:
+            s += "+%d" %(loc.line,)
+            if loc.column:
+                s += ":%d " %(loc.column,)
+            else:
+                s += " "
+        s += loc.filename
         return s
     elif format == 'human':
         s = "Filename: %s" %(filename,)
-        if lineno:
-            s += "\nLine: %d" %(lineno,)
+        if loc.line:
+            s += "\nLine: %d" %(loc.line,)
+        if loc.column:
+            s += "\nColumn: %d" %(loc.column,)
         return s
     else:
         raise ValueError("unsupported format: {}".format(format))
@@ -175,6 +184,10 @@ def build_cli():
         default=os.environ.get("PYLOC_DEFAULT_FORMAT", DEFAULT_LOC_FORMAT),
         help="How to write object location")
     parser.add_argument(
+        "-a", "--all",
+        action="store_true",
+        help="Print all possible location in case ambiguities")
+    parser.add_argument(
         "object_name",
         action="store",
         help="A python object named: module[:qualname]")
@@ -184,15 +197,20 @@ def main(argv):
     cli = build_cli()
     options = cli.parse_args(argv[1:])
     try:
-        filename, lineno = pyloc(options.object_name)
+        locs = pyloc(options.object_name)
     except PylocError as e:
         sys.stderr.write("pyloc: ")
         sys.stderr.write(str(e))
         sys.stderr.write("\n")
         return 1
     else:
-        sys.stdout.write(format_loc(filename, lineno, format=options.format))
-        sys.stdout.write("\n")
+        if options.all:
+            locs_to_print = locs
+        else:
+            locs_to_print = [locs[0]]
+        for loc in locs:
+            sys.stdout.write(format_loc(loc, format=options.format))
+            sys.stdout.write("\n")
         return 0
 
 if __name__ == "__main__":

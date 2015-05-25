@@ -90,7 +90,7 @@ class TestPyloc(unittest.TestCase):
             raise self.failureException(msg)
 
     def assertLocEqual(self, rootdir, expected, modname, qualname=None,
-                       line=None):
+                       locs=None):
         self.assertFalse(modname in sys.modules,
                          "'%s' is already imported" % (modname,))
         fullname = modname
@@ -98,10 +98,19 @@ class TestPyloc(unittest.TestCase):
             fullname += ":" + qualname
         if not os.path.isabs(expected):
             expected = os.path.join(rootdir, expected)
+        if locs is None:
+            locs = [(None, None)]
+        elif isinstance(locs, tuple):
+            locs = [locs]
+        elif isinstance(locs, int):
+            locs = [(locs, None)]
         with save_sys_modules():
-            filename, lineno = pyloc(fullname)
-        self.assertEqual(line, lineno)
-        self.assertEqual(expected, filename)
+            actuals = pyloc(fullname)
+        self.assertEqual(len(locs), len(actuals))
+        for actual, loc in zip(actuals, locs):
+            self.assertEqual(expected, actual.filename)
+            self.assertEqual(loc[0], actual.line)
+            self.assertEqual(loc[1], actual.column)
 
     @contextlib.contextmanager
     def fixture(self, spec):
@@ -164,14 +173,14 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testpkg/utils.py",
                                  "pyloc_testpkg.utils",
                                  qualname="func",
-                                 line=1)
+                                 locs=1)
 
     def test_function_in_module(self):
         spec = {"pyloc_testmod":"def func(): pass"}
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="func",
-                                 line=1)
+                                 locs=1)
 
     def test_multiple_functions(self):
         modcontent = textwrap.dedent(
@@ -188,14 +197,14 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="f",
-                                 line=3 if sys.platform == "win32" else 6)
+                                 locs=3 if sys.platform == "win32" else 6)
 
     def test_class(self):
         spec = {"pyloc_testmod":"class Foo(object): pass"}
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 line=1)
+                                 locs=1)
 
     def test_class_robust_comment(self):
         modcontent = textwrap.dedent(
@@ -213,7 +222,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 line=7)
+                                 locs=7)
 
     def test_class_robust_docstring(self):
         modcontent = textwrap.dedent(
@@ -232,7 +241,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo",
-                                 line=8)
+                                 locs=8)
 
     def test_nested_class(self):
         modcontent = textwrap.dedent(
@@ -247,7 +256,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture(spec) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo.Foo.Foo",
-                                 line=4)
+                                 locs=4)
 
     def test_method(self):
         modcontent = textwrap.dedent(
@@ -259,7 +268,7 @@ class TestPyloc(unittest.TestCase):
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo.meth",
-                                 line=2)
+                                 locs=2)
 
     def test_nested_method(self):
         modcontent = textwrap.dedent(
@@ -280,16 +289,16 @@ class TestPyloc(unittest.TestCase):
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Foo.meth",
-                                 line=7)
+                                 locs=7)
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="Bar.meth",
-                                 line=4)
+                                 locs=4)
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="A.B.meth",
-                                 line=11)
+                                 locs=11)
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="meth",
-                                 line=1)
+                                 locs=1)
 
     def test_constant(self):
         modcontent = textwrap.dedent(

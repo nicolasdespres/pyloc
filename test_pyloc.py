@@ -183,21 +183,22 @@ class TestPyloc(unittest.TestCase):
                                  locs=1)
 
     def test_multiple_functions(self):
-        modcontent = textwrap.dedent(
-            """\
-            import sys
-            if sys.platform == "win32":
-                def f():
-                    pass
-            else:
-                def f():
-                    pass
-            """)
-        spec = {"pyloc_testmod":modcontent}
-        with self.fixture(spec) as fctxt:
-            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
-                                 qualname="f",
-                                 locs=3 if sys.platform == "win32" else 6)
+        for cond, loc in ((True, 3), (False, 6)):
+            modcontent = textwrap.dedent(
+                """\
+                cond = {cond}
+                if cond:
+                    def f():
+                        pass
+                else:
+                    def f():
+                        pass
+                """.format(cond=cond))
+            spec = {"pyloc_testmod":modcontent}
+            with self.fixture(spec) as fctxt:
+                fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                     qualname="f",
+                                     locs=loc)
 
     def test_class(self):
         spec = {"pyloc_testmod":"class Foo(object): pass"}

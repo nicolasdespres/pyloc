@@ -208,21 +208,22 @@ class TestPyloc(unittest.TestCase):
                                  locs=1)
 
     def test_multiple_classes(self):
-        modcontent = textwrap.dedent(
-            """\
-            cond = True
-            if cond:
-                class C(object):
-                    pass
-            else:
-                class C(object):
-                    pass
-            """)
-        spec = {"pyloc_testmod":modcontent}
-        with self.fixture(spec) as fctxt:
-            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
-                                 qualname="C",
-                                 locs=[(3, None), (6, None)])
+        for cond in (True, False):
+            modcontent = textwrap.dedent(
+                """\
+                cond = {cond}
+                if cond:
+                    class C(object):
+                        pass
+                else:
+                    class C(object):
+                        pass
+                """.format(cond=cond))
+            spec = {"pyloc_testmod":modcontent}
+            with self.fixture(spec) as fctxt:
+                fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                     qualname="C",
+                                     locs=[(3, None), (6, None)])
 
     def test_class_robust_comment(self):
         modcontent = textwrap.dedent(

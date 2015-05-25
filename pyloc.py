@@ -303,8 +303,11 @@ def main(argv):
         if options.all:
             locs_to_print = locs
         else:
-            locs_to_print = [locs[0]]
-        for loc in locs:
+            if len(locs) > 1:
+                locs_to_print = [Location(locs[0].filename, None, None)]
+            else:
+                locs_to_print = locs
+        for loc in locs_to_print:
             sys.stdout.write(format_loc(loc, format=options.format))
             sys.stdout.write("\n")
         return 0

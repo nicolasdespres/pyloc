@@ -57,6 +57,10 @@ class _ClassDefVisitor(ast.NodeVisitor):
         self.path.pop()
         return retval
 
+    def visit_FunctionDef(self, node):
+        # Do not descend into FunctionDef
+        pass
+
 def _get_file_content(filename):
     with open(filename) as f:
         return f.read()

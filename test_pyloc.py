@@ -401,6 +401,35 @@ class TestPyloc(unittest.TestCase):
                                  qualname="C.Point",
                                  locs=(3, 4))
 
+    def test_class_alias(self):
+        modcontent = textwrap.dedent(
+            """\
+            def f():
+                D = 51
+            class C(object):
+                D = 42
+            D = C
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="D",
+                                 locs=(5, 0))
+
+    def test_class_alias_redefinition(self):
+        modcontent = textwrap.dedent(
+            """\
+            class C(object):
+                D = 42
+            D = 42
+            D = C
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="D",
+                                 locs=[(3, 0),(4,0)])
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

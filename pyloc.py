@@ -124,7 +124,8 @@ def pyloc(target):
     ### Get the object in module
     if has_qualname:
         attrs = qualname.split(".")
-        for i in range(len(attrs)):
+        i = 0
+        while i < len(attrs):
             attr = attrs[i]
             try:
                 new_obj = getattr(obj, attr)
@@ -141,6 +142,8 @@ def pyloc(target):
                     obj = new_obj
                 else:
                     break
+            i += 1
+        obj_qualname = ".".join(attrs[:i])
     ### Get location
     filename = inspect.getsourcefile(obj)
     if not filename:
@@ -152,7 +155,7 @@ def pyloc(target):
         # make some effort to find the best matching class definition:
         # use the one with the least indentation, which is the one
         # that's most probably not inside a function definition.
-        candidates = _search_classdef(filename, qualname)
+        candidates = _search_classdef(filename, obj_qualname)
         if candidates:
             if len(candidates) > 1:
                 # Try to disambiguite by locating the method defined in the

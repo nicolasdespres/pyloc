@@ -168,22 +168,21 @@ class TestPyloc(unittest.TestCase):
                                  "pyloc_testpkg.utils")
 
     def test_module_in_module(self):
-        spec = {"pyloc_testmod":"import sys"}
+        spec = {"pyloc_testmod":"import os"}
         with self.fixture(spec) as fctxt:
-            fctxt.assertLocEqual("pyloc_testmod.py",
-                                 "pyloc_testmod", qualname="sys")
+            self.assertLocEqual(PLATSTDLIB_PATH, "os.py",
+                                "pyloc_testmod", qualname="os")
 
     def test_module_in_class(self):
         modcontent = textwrap.dedent(
             """\
             class C(object):
-                import sys
+                import os
             """)
         spec = {"pyloc_testmod":modcontent}
         with self.fixture(spec) as fctxt:
-            fctxt.assertLocEqual("pyloc_testmod.py",
-                                 "pyloc_testmod", qualname="C.sys",
-                                 locs=(1,0))
+            self.assertLocEqual(PLATSTDLIB_PATH, "os.py",
+                                "pyloc_testmod", qualname="C.os")
 
     def test_function_in_module_in_package(self):
         spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
@@ -503,11 +502,19 @@ class TestPyloc(unittest.TestCase):
     def test_constant(self):
         modcontent = textwrap.dedent(
             """\
+            class C(object):
+                PI = 3.14
+            class D(object):
+                _, PI = (2, 3.14)
             PI = 3.14
             """)
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
-                                 qualname="PI")
+                                 qualname="PI", locs=(5, 0))
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="C.PI", locs=(2, 4))
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="D.PI", locs=(4, 4))
 
     @unittest.skipIf(PY_VERSION >= (3, 0, 0), "test for python 2 only")
     def test_unicode(self):
@@ -518,4 +525,5 @@ class TestPyloc(unittest.TestCase):
         with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
             fctxt.assertLocEqual(unicode("pyloc_testmod.py"),
                                  unicode("pyloc_testmod"),
-                                 qualname=unicode("PI"))
+                                 qualname=unicode("PI"),
+                                 locs=(1,0))

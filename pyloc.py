@@ -158,6 +158,42 @@ def _search_assign(filename, qualname):
     visitor.visit(root_node)
     return visitor.candidates
 
+def _is_inspectable(obj):
+    return inspect.isclass(obj) \
+        or inspect.ismethod(obj) \
+        or inspect.isfunction(obj) \
+        or inspect.ismodule(obj)
+
+def _get_locations(obj, qualname):
+    filename = inspect.getsourcefile(obj)
+    if not filename:
+        return [Location(inspect.getfile(obj), None, None)]
+    if inspect.ismodule(obj):
+        return [Location(filename, None, None)]
+    if inspect.isclass(obj):
+        ### Search for ClassDef node in AST.
+        candidates = _search_classdef(filename, qualname)
+        if candidates:
+            if len(candidates) > 1:
+                # Try to disambiguite by locating the method defined in the
+                # class.
+                candidate = _disamb_class_loc(candidates, obj)
+                if candidate is not None:
+                    return [Location(filename,
+                                     candidate.lineno,
+                                     candidate.col_offset)]
+            return _candidate_nodes_to_locations(filename, candidates)
+        ### Search for Assign node in AST
+        candidates = _search_assign(filename, qualname)
+        if candidates:
+            return _candidate_nodes_to_locations(filename, candidates)
+        return [Location(filename, None, None)]
+    return [Location(filename, _get_line(obj), None)]
+
+def _has_same_filename(locs):
+    filename = locs[0].filename
+    return all(map(lambda x: x.filename == filename, locs))
+
 def pyloc(target):
     """Return (filename, lineno) defining object named "module[:qualname]".
 
@@ -173,58 +209,41 @@ def pyloc(target):
     mod_name, has_qualname, qualname = target.partition(":")
     ### Try to import the module containing the given target.
     try:
-        obj = module = importlib.import_module(mod_name)
+        module = importlib.import_module(mod_name)
     except ImportError as exc:
         raise ModuleNameError(mod_name, exc)
+    ### Get location of module
+    if not has_qualname:
+        return _get_locations(module, None)
     ### Get the object in module
-    if has_qualname:
-        attrs = qualname.split(".")
-        i = 0
-        while i < len(attrs):
-            attr = attrs[i]
-            try:
-                new_obj = getattr(obj, attr)
-            except AttributeError:
-                raise AttributeNameError(".".join([module.__name__]+attrs[:i]),
-                                         attr)
-            else:
-                # If new_obj is not a class, method or function, we won't be
-                # able to get the file defining it so we stick stop at the
-                # previous object. It may happens when target is a constant.
-                if inspect.isclass(new_obj) \
-                   or inspect.ismethod(new_obj) \
-                   or inspect.isfunction(new_obj):
-                    obj = new_obj
-                else:
-                    break
-            i += 1
-        obj_qualname = ".".join(attrs[:i])
+    attrs = qualname.split(".")
+    obj = module
+    last_inspectable_obj = obj
+    last_inspectable_idx = 0
+    for i in range(len(attrs)):
+        attr = attrs[i]
+        try:
+            obj = getattr(obj, attr)
+        except AttributeError:
+            raise AttributeNameError(".".join([module.__name__]+attrs[:i]),
+                                     attr)
+        else:
+            if _is_inspectable(obj):
+                last_inspectable_obj = obj
+                last_inspectable_idx = i
+    last_inspectable_obj_qualname = ".".join(attrs[:last_inspectable_idx+1])
     ### Get location
-    filename = inspect.getsourcefile(obj)
-    if not filename:
-        return [Location(inspect.getfile(obj), None, None)]
-    if inspect.ismodule(obj):
-        return [Location(filename, None, None)]
-    if inspect.isclass(obj):
-        assert has_qualname
-        ### Search for ClassDef node in AST.
-        candidates = _search_classdef(filename, obj_qualname)
-        if candidates:
-            if len(candidates) > 1:
-                # Try to disambiguite by locating the method defined in the
-                # class.
-                candidate = _disamb_class_loc(candidates, obj)
-                if candidate is not None:
-                    return [Location(filename,
-                                     candidate.lineno,
-                                     candidate.col_offset)]
-            return _candidate_nodes_to_locations(filename, candidates)
-        ### Search for Assign node in AST
-        candidates = _search_assign(filename, obj_qualname)
-        if candidates:
-            return _candidate_nodes_to_locations(filename, candidates)
-        return [Location(filename, None, None)]
-    return [Location(filename, _get_line(obj), None)]
+    last_inspectable_locs = _get_locations(last_inspectable_obj,
+                                           last_inspectable_obj_qualname)
+    if last_inspectable_obj == obj:
+        return last_inspectable_locs
+    ### Further investigate location of non-inspect-able object.
+    assert _has_same_filename(last_inspectable_locs)
+    filename = last_inspectable_locs[0].filename
+    candidates = _search_assign(filename, qualname)
+    if candidates:
+        return _candidate_nodes_to_locations(filename, candidates)
+    return [Location(filename, None, None)]
 
 # =============================== #
 # Command line interface function #

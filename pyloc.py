@@ -282,7 +282,7 @@ All right reserved.
     default_format=DEFAULT_LOC_FORMAT,
     )
 
-def build_cli():
+def _build_cli():
     class RawDescriptionWithArgumentDefaultsHelpFormatter(
             argparse.ArgumentDefaultsHelpFormatter,
             argparse.RawDescriptionHelpFormatter,
@@ -308,21 +308,25 @@ def build_cli():
         help="A python object named: module[:qualname]")
     return parser
 
-def main(argv):
-    cli = build_cli()
+def _error(msg):
+    sys.stderr.write("pyloc: ")
+    sys.stderr.write(msg)
+    sys.stderr.write("\n")
+
+def _main(argv):
+    cli = _build_cli()
     options = cli.parse_args(argv[1:])
     try:
         locs = pyloc(options.object_name)
     except PylocError as e:
-        sys.stderr.write("pyloc: ")
-        sys.stderr.write(str(e))
-        sys.stderr.write("\n")
+        _error(str(e))
         return 1
     else:
         if options.all:
             locs_to_print = locs
         else:
             if len(locs) > 1:
+                assert _has_same_filename(locs)
                 locs_to_print = [Location(locs[0].filename, None, None)]
             else:
                 locs_to_print = locs
@@ -332,4 +336,4 @@ def main(argv):
         return 0
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(_main(sys.argv))

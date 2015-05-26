@@ -313,9 +313,9 @@ def _error(msg):
     sys.stderr.write(msg)
     sys.stderr.write("\n")
 
-def _main(argv):
+def _main():
     cli = _build_cli()
-    options = cli.parse_args(argv[1:])
+    options = cli.parse_args(sys.argv[1:])
     try:
         locs = pyloc(options.object_name)
     except PylocError as e:
@@ -336,4 +336,4 @@ def _main(argv):
         return 0
 
 if __name__ == "__main__":
-    sys.exit(_main(sys.argv))
+    sys.exit(_main())

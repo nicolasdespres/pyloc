@@ -157,6 +157,11 @@ class TestPyloc(unittest.TestCase):
                                 "mmap.so")
         self.assertLocEqual(PLATSTDLIB_PATH, filename, "mmap")
 
+    def test_function_in_native_module(self):
+        filename = os.path.join(sysconfig.get_config_var("DESTSHARED"),
+                                "mmap.so")
+        self.assertLocEqual(PLATSTDLIB_PATH, filename, "mmap", qualname="mmap")
+
     def test_module(self):
         with self.fixture({"pyloc_testmod":""}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod")

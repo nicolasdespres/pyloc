@@ -166,6 +166,23 @@ class TestPyloc(unittest.TestCase):
         with self.fixture({"pyloc_testmod":""}) as fctxt:
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod")
 
+    def test_builtin_module(self):
+        with self.assertRaises(TypeError) as cm:
+            pyloc("sys")
+        self.assertRegexp(str(cm.exception), r"is a built-in module")
+
+    def test_builtin_module_in_class(self):
+        modcontent = textwrap.dedent(
+            """\
+            class C(object):
+                import sys
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        with self.fixture(spec) as fctxt:
+            with self.assertRaises(TypeError) as cm:
+                pyloc("pyloc_testmod:C.sys")
+            self.assertRegexp(str(cm.exception), r"is a built-in module")
+
     def test_module_in_package(self):
         spec = {"pyloc_testpkg":{"utils":""}}
         with self.fixture(spec) as fctxt:

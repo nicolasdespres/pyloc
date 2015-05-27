@@ -17,7 +17,6 @@ from pyloc import pyloc
 from pyloc import ModuleNameError
 from pyloc import AttributeNameError
 
-
 # Guidelines:
 # - Generate the package/module fixture for testing.
 # - If you cannot, use only fixture names that are part of the standard
@@ -25,7 +24,6 @@ from pyloc import AttributeNameError
 #   by either this module and pyloc.
 
 
-PLATSTDLIB_PATH = sysconfig.get_path('platstdlib')
 PY_VERSION = tuple(map(int, sysconfig.get_config_var('py_version').split(".")))
 
 @contextlib.contextmanager
@@ -153,14 +151,18 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testpkg/__init__.py", "pyloc_testpkg")
 
     def test_no_source_file(self):
-        filename = os.path.join(sysconfig.get_config_var("DESTSHARED"),
-                                "mmap.so")
-        self.assertLocEqual(PLATSTDLIB_PATH, filename, "mmap")
+        with save_sys_modules():
+            import mmap
+            filename = mmap.__file__
+        self.assertLocEqual(None, # Ignored because filename is absolute
+                            filename, "mmap")
 
     def test_function_in_native_module(self):
-        filename = os.path.join(sysconfig.get_config_var("DESTSHARED"),
-                                "mmap.so")
-        self.assertLocEqual(PLATSTDLIB_PATH, filename, "mmap", qualname="mmap")
+        with save_sys_modules():
+            import mmap
+            filename = mmap.__file__
+        self.assertLocEqual(None, # Ignored because filename is absolute
+                            filename, "mmap", qualname="mmap")
 
     def test_module(self):
         with self.fixture({"pyloc_testmod":""}) as fctxt:
@@ -192,7 +194,7 @@ class TestPyloc(unittest.TestCase):
     def test_module_in_module(self):
         spec = {"pyloc_testmod":"import os"}
         with self.fixture(spec) as fctxt:
-            self.assertLocEqual(PLATSTDLIB_PATH, "os.py",
+            self.assertLocEqual(None, os.__file__.rstrip("c"),
                                 "pyloc_testmod", qualname="os")
 
     def test_module_in_class(self):
@@ -203,7 +205,7 @@ class TestPyloc(unittest.TestCase):
             """)
         spec = {"pyloc_testmod":modcontent}
         with self.fixture(spec) as fctxt:
-            self.assertLocEqual(PLATSTDLIB_PATH, "os.py",
+            self.assertLocEqual(None, os.__file__.rstrip("c"),
                                 "pyloc_testmod", qualname="C.os")
 
     def test_follow_imported_module(self):

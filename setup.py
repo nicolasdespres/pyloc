@@ -1,5 +1,11 @@
 # -*- encoding: utf-8 -*-
 
+# Relevant documentation used when writing this file:
+#   https://docs.python.org/3/library/distutils.html
+#   http://www.diveinto.org/python3/packaging.html
+#   http://www.scotttorborg.com/python-packaging/
+# and of course several example projects such as: csvkit, nose or buildout.
+
 from setuptools import setup
 import os
 import sys

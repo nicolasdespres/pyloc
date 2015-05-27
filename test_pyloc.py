@@ -206,6 +206,63 @@ class TestPyloc(unittest.TestCase):
             self.assertLocEqual(PLATSTDLIB_PATH, "os.py",
                                 "pyloc_testmod", qualname="C.os")
 
+    def test_follow_imported_module(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    def realf():
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg import mod1
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="mod1")
+
+    def test_follow_imported_module_as(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    def realf():
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg import mod1 as m
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="m")
+
+    def test_follow_imported_module_star(self):
+        spec = {
+            "pyloc_testpkg": {
+                "subpkg": {
+                    "__init__": textwrap.dedent(
+                    """\
+                    __all__ = ["mod1", "mod2"]
+                    """),
+                    "mod1": "",
+                    "mod2": "",
+                },
+                "mod": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.subpkg import *
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/subpkg/mod1.py",
+                                 "pyloc_testpkg.mod", qualname="mod1")
+
     def test_function_in_module_in_package(self):
         spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
         with self.fixture(spec) as fctxt:

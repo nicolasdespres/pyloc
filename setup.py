@@ -2,12 +2,15 @@
 
 from setuptools import setup
 import os
+import sys
 
 ROOT_DIR = os.path.dirname(__file__)
 
 def read(*rnames):
     with open(os.path.join(ROOT_DIR, *rnames)) as stream:
         return stream.read()
+
+PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
 
 setup(
     name="pyloc",
@@ -24,6 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             "pyloc=pyloc:_main",
+            "pyloc%s=pyloc:_main" % (PY_VERSION_SUFFIX,),
         ],
     },
     # How to run the test suite.

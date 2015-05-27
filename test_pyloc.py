@@ -536,6 +536,66 @@ class TestPyloc(unittest.TestCase):
                                  qualname="D",
                                  locs=(3, 0))
 
+    def test_follow_imported_class(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    class RealC(object):
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+
+                    from pyloc_testpkg.mod1 import RealC
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="RealC",
+                                 locs=(1, 0))
+
+    def test_follow_imported_class_as(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    class RealC(object):
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import RealC as C
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="C",
+                                 # Cannot get line/column because C does not
+                                 # appear in mod1.py.
+                                 locs=None)
+
+    def test_follow_imported_class_star(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    class RealC(object):
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import *
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="RealC",
+                                 locs=(1, 0))
+
     def test_method(self):
         modcontent = textwrap.dedent(
             """\

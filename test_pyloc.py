@@ -655,6 +655,40 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="D.PI", locs=(4, 4))
 
+    def test_do_not_follow_imported_constant(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    PI = 3.14
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import PI
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod2.py", "pyloc_testpkg.mod2",
+                                 qualname="PI", locs=(1, 0))
+
+    def test_do_not_follow_imported_constant_as(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    PI = 3.14
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import PI as pi
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod2.py", "pyloc_testpkg.mod2",
+                                 qualname="pi", locs=(1, 0))
+
     @unittest.skipIf(PY_VERSION >= (3, 0, 0), "test for python 2 only")
     def test_unicode(self):
         modcontent = textwrap.dedent(

@@ -113,6 +113,8 @@ def _candidate_nodes_to_locations(filename, candidates):
 
 def _get_node_name(node):
     if hasattr(node, "name"):
+        if hasattr(node, "asname") and node.asname:
+            return node.asname
         return node.name
     elif hasattr(node, "id"):
         return node.id
@@ -142,6 +144,13 @@ class _AssignVisitor(ast.NodeVisitor):
 
     def visit_Assign(self, node):
         for name_node in _iter_assigned_names(node):
+            qualname = ".".join(_get_node_name(n)
+                                for n in self.path+[name_node])
+            if qualname == self.qualname:
+                self.candidates.append(node)
+
+    def visit_ImportFrom(self, node):
+        for name_node in node.names:
             qualname = ".".join(_get_node_name(n)
                                 for n in self.path+[name_node])
             if qualname == self.qualname:

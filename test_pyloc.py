@@ -252,6 +252,63 @@ class TestPyloc(unittest.TestCase):
                                  qualname="f",
                                  locs=1)
 
+    def test_follow_imported_function(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    def realf():
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import realf
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="realf",
+                                 locs=1)
+
+    def test_follow_imported_function_as(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    def realf():
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import realf as f
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="f",
+                                 locs=1)
+
+    def test_follow_imported_function_star(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    def realf():
+                        pass
+                    """),
+                "mod2": textwrap.dedent(
+                    """\
+                    from pyloc_testpkg.mod1 import *
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py", "pyloc_testpkg.mod2",
+                                 qualname="realf",
+                                 locs=1)
+
     def test_closure(self):
         modcontent = textwrap.dedent(
             """\

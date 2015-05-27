@@ -204,10 +204,14 @@ def _has_same_filename(locs):
     return all(map(lambda x: x.filename == filename, locs))
 
 def pyloc(target):
-    """Return (filename, lineno) defining object named "module[:qualname]".
+    """Return possible location defining ``target`` object.
 
-    `lineno` may be None if not applicable (i.e. for module or package) or
-    if cannot be found.
+    ``target`` named "module[:qualname]".
+
+    Return a list of location namedtuple where the first value is
+    the filename, the second the line number and the third the column number.
+    The line and column number may be None if no applicable (i.e. for module
+    or package) or if they cannot be found.
 
     Inspired by 'inspect._main()' and 'inspect.findsource()' by
       Ka-Ping Yee <ping@lfw.org> and

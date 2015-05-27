@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-"""Prints the location of the definition a any python object in your file-system.
+"""Prints the location of python object definition in your file-system.
 """
 
 

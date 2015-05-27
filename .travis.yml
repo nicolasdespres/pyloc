@@ -1,3 +1,4 @@
+# status: https://travis-ci.org/nicolasdespres/pyloc
 # documentation: http://docs.travis-ci.com/user/languages/python/
 language: python
 python:

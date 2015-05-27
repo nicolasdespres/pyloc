@@ -1,0 +1,10 @@
+# documentation: http://docs.travis-ci.com/user/languages/python/
+language: python
+python:
+    - "nightly"
+    - 3.4
+    - 3.3
+    - 3.2
+    - 2.7
+sudo: false
+script: nosetests

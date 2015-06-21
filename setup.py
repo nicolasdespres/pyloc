@@ -9,6 +9,7 @@
 from setuptools import setup
 import os
 import sys
+import subprocess
 
 ROOT_DIR = os.path.dirname(__file__)
 
@@ -16,11 +17,15 @@ def read(*rnames):
     with open(os.path.join(ROOT_DIR, *rnames)) as stream:
         return stream.read()
 
+def get_version():
+    out = subprocess.check_output(["git","describe","--always","--match","v*"])
+    return out[1:]
+
 PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
 
 setup(
     name="pyloc",
-    version="0.1.0",
+    version=get_version(),
     # We only have a single module to distribute
     packages=[],
     py_modules=[

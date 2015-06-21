@@ -90,6 +90,8 @@ do
 done
 
 ### Cleanup release/build directories
+trap -- on_exit EXIT
+trap -- on_interrupt INT
 cleanup
 rm -rf dist build pyloc.egg-info
 

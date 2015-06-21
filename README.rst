@@ -76,7 +76,8 @@ You can install _pyloc_ using ``pip`` like this::
 
     $ pip install pyloc
 
-or
+or::
+
     $ pip3 install pyloc
 
 From source

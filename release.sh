@@ -28,6 +28,7 @@ for version in 2.7.10 3.2.3 3.2.6 3.3.6 3.4.3
 do
   PYENV_VERSION=$version python -m unittest test_pyloc
 done
+rm -rf dist build pyloc.egg-info
 python setup.py sdist
 python setup.py bdist_wheel --universal
 twine upload dist/*

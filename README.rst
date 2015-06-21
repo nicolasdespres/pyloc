@@ -72,6 +72,8 @@ Installation
 pip
 ---
 
+You can install _pyloc_ using ``pip`` like this::
+
     $ pip install pyloc
 
 or
@@ -80,7 +82,7 @@ or
 From source
 -----------
 
-Clone this repository and run
+Clone this repository and run::
 
     $ python setup.py develop
 

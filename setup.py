@@ -18,9 +18,8 @@ def read(*rnames):
         return stream.read()
 
 def get_version():
-    out = subprocess.check_output(["git","describe","--always","--match","v*"])
-    out = out.strip()
-    return out[1:]
+    with open(os.path.join(ROOT_DIR, "VERSION.txt")) as stream:
+        return stream.read().strip()
 
 PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
 

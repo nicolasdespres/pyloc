@@ -66,6 +66,24 @@ your are using::
     Filename: /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/email/utils.py
     Line: 85
 
+Installation
+============
+
+pip
+---
+
+    $ pip install pyloc
+
+or
+    $ pip3 install pyloc
+
+From source
+-----------
+
+Clone this repository and run
+
+    $ python setup.py develop
+
 Known bugs
 ==========
 

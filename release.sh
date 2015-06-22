@@ -108,6 +108,3 @@ python setup.py bdist_wheel --universal
 
 ### Upload
 twine upload dist/*
-
-### Final cleanup
-cleanup

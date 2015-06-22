@@ -103,6 +103,3 @@ virtualenv "$DIST_ENV_DIR"
   pyloc subprocess
   python -m unittest test_pyloc
 )
-
-### Final cleanup
-cleanup

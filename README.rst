@@ -98,7 +98,7 @@ Known bugs
 Hacking
 =======
 
-See `HACKING <HACKING.rst>`_ for details.
+See HACKING.rst for details.
 
 License
 =======

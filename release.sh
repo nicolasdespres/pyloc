@@ -96,8 +96,8 @@ rm -rf dist build pyloc.egg-info
 ### Generate and check version
 VERSION=$(git describe --dirty --always --match 'v*' | sed -e 's/^v//')
 echo "$VERSION" > VERSION.txt
-# grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+$' VERSION.txt \
-#   || fatal "invalid version '$VERSION'"
+grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+$' VERSION.txt \
+  || fatal "invalid version '$VERSION'"
 
 ### Build distribution
 python setup.py sdist

@@ -90,9 +90,9 @@ Clone this repository and run::
 Known bugs
 ==========
 
-* Class or built-in types like int or str do not contain location
+* Classes or built-in types like int or str do not contain location
   information. In this case *pyloc* tries to look for the name in the
-  AST. Since procedure may not be accurate since Python is a dynamic
+  AST. This procedure may not be accurate since Python is a dynamic
   language.
 
 Hacking

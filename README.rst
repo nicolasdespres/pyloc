@@ -22,7 +22,9 @@ or ``vi``.
 Examples
 ========
 
-You can see the location of ``Popen.wait`` method in the sub-process package::
+You can see the location of ``Popen.wait`` method in the sub-process package:
+
+.. code:: bash
 
     $ python -m pyloc -f human subprocess:Popen.wait
     Filename: /Users/polrop/.pyenv/versions/2.7.9/lib/python2.7/subprocess.py
@@ -37,22 +39,30 @@ installation path and version)
 
 Note that the object naming syntax is as follow: ``module[:qualname]``
 
-To open it in Emacs you can do::
+To open it in Emacs you can do:
+
+.. code:: bash
 
     $ emacsclient `python -m pyloc -f emacs subprocess:Popen.wait`
 
-or in vim::
+or in vim:
+
+.. code:: bash
 
     $ vim `python -m pyloc -f vi subprocess:Popen.wait`
 
 If you are lazy typing ``-f <format>`` all the time and you often use
 the same format, you can set the default output format this way (you
-can add this line in your ``.zshenv`` or ``.bashrc``)::
+can add this line in your ``.zshenv`` or ``.bashrc``):
+
+.. code:: bash
 
     $ export PYLOC_DEFAULT_FORMAT=emacs
 
 *pyloc* will always locate object based on the ``python`` interpreter
-your are using::
+your are using:
+
+.. code:: bash
 
     $ python3 -m pyloc -f human subprocess:Popen.wait
     Filename: /Users/polrop/.pyenv/versions/3.4.3/lib/python3.4/subprocess.py
@@ -72,18 +82,24 @@ Installation
 pip
 ---
 
-You can install _pyloc_ using ``pip`` like this::
+You can install _pyloc_ using ``pip`` like this:
+
+.. code:: bash
 
     $ pip install pyloc
 
-or::
+or
+
+.. code:: bash
 
     $ pip3 install pyloc
 
 From source
 -----------
 
-Clone this repository and run::
+Clone this repository and run:
+
+.. code:: bash
 
     $ python setup.py develop
 

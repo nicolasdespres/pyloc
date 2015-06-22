@@ -22,7 +22,6 @@ export LC_ALL=C
 unset CDPATH
 
 : ${RELEASE_DEBUG:=false}
-DIST_ENV_DIR="distcheck_env"
 
 # Print its arguments on stderr prefixed by the base name of this script and
 # a 'fatal' tag.
@@ -40,11 +39,10 @@ cleanup()
     echo "You are in debug mode. No directory are removed."
     return
   else
-    echo "Cleaning up..."
+    echo "Cleaning up release procedure..."
   fi
   rm -rf \
-    "VERSION.txt" \
-    "$DIST_ENV_DIR"
+     "VERSION.txt"
 }
 
 # Called when the script exit.
@@ -56,7 +54,7 @@ on_exit()
 # Called when the script is interrupt with SIGINT.
 on_interrupt()
 {
-  echo "Git installation has been interrupted!!!"
+  echo "Release script has been interrupted!!!"
   exit 2
 }
 
@@ -98,25 +96,18 @@ rm -rf dist build pyloc.egg-info
 ### Generate and check version
 VERSION=$(git describe --dirty --always --match 'v*' | sed -e 's/^v//')
 echo "$VERSION" > VERSION.txt
-grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+$' VERSION.txt \
-  || fatal "invalid version (see VERSION.txt)"
+# grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+$' VERSION.txt \
+#   || fatal "invalid version '$VERSION'"
 
 ### Build distribution
 python setup.py sdist
 python setup.py bdist_wheel --universal
 
 ### Test distribution
-virtualenv "$DIST_ENV_DIR"
-(
-  set +o nounset
-  . "$DIST_ENV_DIR/bin/activate"
-  set -o nounset
-  cd /tmp
-  pip install "$ME_DIR/dist/pyloc-$VERSION.tar.gz"
-  pyloc subprocess
-  python -m unittest test_pyloc
-)
-rm -rf "$DIST_ENV_DIR"
+./distcheck.sh "$ME_DIR/dist/pyloc-$VERSION.tar.gz"
 
 ### Upload
 twine upload dist/*
+
+### Final cleanup
+cleanup

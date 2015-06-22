@@ -119,7 +119,8 @@ See HACKING.rst for details.
 License
 =======
 
-*pyloc* is released under the term of the `Simplified BSD License`_.
+*pyloc* is released under the term of the
+`Simplified BSD License <http://choosealicense.com/licenses/bsd-2-clause>`_.
 Copyright (c) 2015, Nicolas Desprès
 All rights reserved.
 
@@ -127,5 +128,3 @@ As noted in the source code, some part has been inspired by code from
 the ``inspect`` module written by Ka-Ping Yee <ping@lfw.org> and
 Yury Selivanov <yselivanov@sprymix.com> form the Python 3.4.3
 distribution (see the LICENSE file in the python distribution)
-
-.. _`Simplified BSD License`: http://choosealicense.com/licenses/bsd-2-clause

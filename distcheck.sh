@@ -92,15 +92,27 @@ trap -- on_interrupt INT
 ### Cleanup in case previous was killed
 cleanup
 
-echo "Distchecking '$DISTTARBALL'"
-### Test distribution in python2
-virtualenv "$DIST_ENV_DIR"
+echo ">>> Distchecking '$DISTTARBALL'"
+if grep -e '-py3-' <<< "$DISTTARBALL"
+then
+  VENV=pyvenv
+  PIP=pip3
+  PYTHON=python3
+else
+  VENV=virtualenv
+  PIP=pip
+  PYTHON=python
+fi
+TAG=$($PYTHON -c 'import sys; print("-%s.%s" % sys.version_info[:2])')
+### Test distribution
+$VENV "$DIST_ENV_DIR"
 (
   set +o nounset
   . "$DIST_ENV_DIR/bin/activate"
   set -o nounset
   cd /tmp
-  pip install "$DISTTARBALL"
+  $PIP install "$DISTTARBALL"
   pyloc subprocess
-  python -m unittest test_pyloc
+  pyloc$TAG subprocess
+  $PYTHON -m unittest test_pyloc
 )

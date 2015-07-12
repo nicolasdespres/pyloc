@@ -172,7 +172,7 @@ test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
 git tag $GIT_TAG_ARGS v$VERSION master
 
 ### Generate and check version
-GIT_VERSION=$(git describe --dirty --always --match 'v*' | sed -e 's/^v//')
+GIT_VERSION=$("$ME_DIR/version.sh")
 echo "$GIT_VERSION" > VERSION.txt
 check_version_format <<< "$GIT_VERSION" \
   || fatal "invalid version '$GIT_VERSION'"

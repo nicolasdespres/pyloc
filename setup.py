@@ -10,6 +10,7 @@ from setuptools import setup
 import os
 import sys
 import subprocess
+import errno
 
 ROOT_DIR = os.path.dirname(__file__)
 
@@ -18,8 +19,11 @@ def read(*rnames):
         return stream.read()
 
 def get_version():
-    with open(os.path.join(ROOT_DIR, "VERSION.txt")) as stream:
-        return stream.read().strip()
+    try:
+        return read("VERSION.txt").strip()
+    except IOError as e:
+        if e.errno == errno.ENOENT:
+            return subprocess.check_output("./version.sh").strip()
 
 PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
 

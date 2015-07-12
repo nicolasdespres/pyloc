@@ -206,11 +206,13 @@ python setup.py bdist_wheel
 echo ">>> Creating python3 binary distribution"
 python3 setup.py bdist_wheel
 
+### List distribution files
+DIST_TARBALLS=$(find "$ME_DIR/dist" -type f -name "pyloc-${GIT_VERSION}*")
+
 ### Test distribution
 if ! $NO_DISTCHECK
 then
-  for dist_tarball in $(find "$ME_DIR/dist" -type f \
-                             -name "pyloc-${GIT_VERSION}*")
+  for dist_tarball in $DIST_TARBALLS
   do
     ./distcheck.sh "$dist_tarball" 2>&1 \
       | sed -e 's/^/distcheck.sh: /'
@@ -226,5 +228,5 @@ fi
 ### Upload
 if ! $NO_UPLOAD
 then
-  twine upload -r $PYPI_REPO dist/*
+  twine upload -r $PYPI_REPO $DIST_TARBALLS
 fi

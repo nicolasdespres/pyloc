@@ -92,6 +92,7 @@ trap -- on_interrupt INT
 ### Cleanup in case previous was killed
 cleanup
 
+echo "Distchecking '$DISTTARBALL'"
 ### Test distribution in python2
 virtualenv "$DIST_ENV_DIR"
 (

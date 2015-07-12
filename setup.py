@@ -12,11 +12,14 @@ import os
 import sys
 import subprocess
 import errno
+import codecs
 
 ROOT_DIR = os.path.dirname(__file__)
 
 def read(*rnames):
-    with open(os.path.join(ROOT_DIR, *rnames)) as stream:
+    with codecs.open(os.path.join(ROOT_DIR, *rnames),
+                     mode="r",
+                     encoding="utf-8") as stream:
         return stream.read()
 
 def get_version():

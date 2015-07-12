@@ -12,7 +12,28 @@
 #
 # OPTIONS
 #
+#  --no-push
+#   Do not push tags and local commit to origin
 #
+#  --no-upload
+#   Do not upload release file to the remote repository set by --repo.
+#
+#  --no-test
+#   Do not run test suite as a prelude.
+#
+#  --no-distcheck
+#   Do not run distcheck script for release archive.
+#
+#  --repo=<reponame>
+#   Set the pypi repository to use. Must match one of the index servers
+#   listed in your ~/.pypirc file. Typically, this is either 'pypi' or
+#   'pypitest'. Default is 'pypi'.
+#
+#  --tag-msg=<message_filename>
+#   Use the message contained in <message_filename> as tag message.
+#
+#  -h|--help
+#   Print this message.
 #
 # Copyright (c) 2015, Nicolas Despres
 # Report any problem to <nicolas.despres@gmail.com>

@@ -24,7 +24,7 @@ def get_version():
         return read("VERSION.txt").strip()
     except IOError as e:
         if e.errno == errno.ENOENT:
-            return subprocess.check_output("./version.sh").strip()
+            return subprocess.check_output("./version.sh").decode().strip()
 
 PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
 

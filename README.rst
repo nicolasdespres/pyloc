@@ -10,12 +10,12 @@ Introduction
 
 *pyloc* is very similar to what ``python3 -m inspect -d <object>``
 offers. However, it is only focused to retrieve the file name (and
-eventually the line number) defining a given Python object. The object
-can be a package, module, class, method or function.
+eventually the line number) where a given Python object is defined.
+The object can be a package, module, class, method or function.
 
-*pyloc* makes some further effort to figure out the line and column number and
-its outputs is formatted so that it can easily be passed to ``emacsclient``
-or ``vi``.
+*pyloc* makes some further efforts to figure out the line and column
+number and its output is formatted so that it can easily be passed
+to ``emacsclient`` or ``vi``.
 
 *pyloc* works with Python 2.7, 3.2, 3.3 and 3.4.
 
@@ -34,7 +34,7 @@ You can see the location of ``Popen.wait`` method in the sub-process package:
     Filename: /Users/polrop/.pyenv/versions/2.7.9/lib/python2.7/email/utils.py
     Line: 85
 
-(Output may be different on your system since you have different
+(Output may be different on your system if you have different
 installation path and version)
 
 Note that the object naming syntax is as follow: ``module[:qualname]``
@@ -82,7 +82,7 @@ Installation
 pip
 ---
 
-You can install _pyloc_ using ``pip`` like this:
+You can install *pyloc* using ``pip`` like this:
 
 .. code:: bash
 

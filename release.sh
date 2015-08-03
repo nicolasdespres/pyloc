@@ -84,7 +84,9 @@ cleanup()
     echo "Cleaning up release procedure..."
   fi
   rm -rf \
-     "VERSION.txt"
+     "VERSION.txt" \
+     "REVISION.txt"
+  git checkout -- pyloc.py
 }
 
 remove_tag()
@@ -198,6 +200,14 @@ echo "$GIT_VERSION" > VERSION.txt
 check_version_format <<< "$GIT_VERSION" \
   || fatal "invalid version '$GIT_VERSION'"
 
+### Generate revision
+GIT_REVISION=$(git rev-parse HEAD)
+echo "$GIT_REVISION" > REVISION.txt
+
+### Include version and revision in the module.
+sed -i '' -e "s/^VERSION = 'dev'$/VERSION = '$GIT_VERSION'/" pyloc.py
+sed -i '' -e "s/^REVISION = 'git'$/REVISION = '$GIT_REVISION'/" pyloc.py
+
 ### Build distribution
 echo ">>> Creating source distribution"
 python setup.py sdist
@@ -214,7 +224,7 @@ if ! $NO_DISTCHECK
 then
   for dist_tarball in $DIST_TARBALLS
   do
-    ./distcheck.sh "$dist_tarball" 2>&1 \
+    ./distcheck.sh "$GIT_VERSION" "$GIT_REVISION" "$dist_tarball" 2>&1 \
       | sed -e 's/^/distcheck.sh: /'
   done
 fi

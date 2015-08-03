@@ -3,7 +3,7 @@
 #::BEGIN::
 # USAGE
 #
-#  distcheck.sh <dist_tarball>
+#  distcheck.sh <version> <revision> <dist_tarball>
 #
 # DESCRIPTION
 #
@@ -74,13 +74,15 @@ on_interrupt()
 # Parse command line options #
 # ========================== #
 
-if [ $# -ne 1 ]
+if [ $# -ne 3 ]
 then
   usage
   exit 1
 fi
 
-DISTTARBALL="$1"
+GIT_VERSION="$1"
+GIT_REVISION="$2"
+DISTTARBALL="$3"
 
 # ======================= #
 # Script main entry point #
@@ -89,10 +91,8 @@ DISTTARBALL="$1"
 trap -- on_exit EXIT
 trap -- on_interrupt INT
 
-### Cleanup in case previous was killed
-cleanup
-
 echo ">>> Distchecking '$DISTTARBALL'"
+cleanup # Cleanup in case previous was killed
 if grep -e '-py3-' <<< "$DISTTARBALL"
 then
   VENV=pyvenv
@@ -114,5 +114,14 @@ $VENV "$DIST_ENV_DIR"
   $PIP install "$DISTTARBALL"
   pyloc subprocess
   pyloc$TAG subprocess
+  BUILTIN_VERSION=$($PYTHON -c 'import pyloc; print(pyloc.VERSION)')
+  test "$BUILTIN_VERSION" = "$GIT_VERSION" \
+    || fatal "built-in version '$BUILTIN_VERSION' not equal to git"\
+             "version '$GIT_VERSION'"
+  BUILTIN_REVISION=$($PYTHON -c 'import pyloc; print(pyloc.REVISION)')
+  test "$BUILTIN_REVISION" = "$GIT_REVISION" \
+    || fatal "built-ni revision '$BUILTIN_REVISION' not equal to git revision"\
+             "'$GIT_REVISION'"
   $PYTHON -m unittest test_pyloc
 )
+echo "Distcheck successful!!!"

@@ -16,6 +16,8 @@ from textwrap import dedent
 import ast
 from collections import namedtuple
 
+VERSION = 'dev'
+REVISION = 'git'
 
 class PylocError(Exception):
     """Base class of all exception raised by this module."""

@@ -150,7 +150,7 @@ do
   shift
 done
 
-  VERSION="$1"
+VERSION="$1"
 check_version_format <<< "$VERSION" || fatal "invalid version format '$VERSION'"
 
 # ======================= #
@@ -187,16 +187,16 @@ cleanup
 rm -rf dist build pyloc.egg-info
 
 ### Tag repository
-  remove_tag
-  GIT_TAG_ARGS="-a"
-  test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
-  git tag $GIT_TAG_ARGS v$VERSION master
+remove_tag
+GIT_TAG_ARGS="-a"
+test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
+git tag $GIT_TAG_ARGS v$VERSION master
 
 ### Generate and check version
 GIT_VERSION=$("$ME_DIR/version.sh")
-  echo "$GIT_VERSION" > VERSION.txt
-  check_version_format <<< "$GIT_VERSION" \
-    || fatal "invalid version '$GIT_VERSION'"
+echo "$GIT_VERSION" > VERSION.txt
+check_version_format <<< "$GIT_VERSION" \
+  || fatal "invalid version '$GIT_VERSION'"
 
 ### Build distribution
 echo ">>> Creating source distribution"

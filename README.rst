@@ -2,6 +2,10 @@
 Welcome to pyloc
 ================
 
+.. image:: https://api.travis-ci.org/nicolasdespres/pyloc.svg?branch=master
+   :target: https://travis-ci.org/nicolasdespres/pyloc
+   :alt: Build Status
+
 *pyloc* prints the location of the definition of any python object in
 your file-system.
 

@@ -21,7 +21,7 @@ The object can be a package, module, class, method or function.
 number and its output is formatted so that it can easily be passed
 to ``emacsclient`` or ``vi``.
 
-*pyloc* works with Python 2.7, 3.2, 3.3 and 3.4.
+*pyloc* works with Python 2.7, 3.2, 3.3, 3.4 and 3.5.
 
 Examples
 ========

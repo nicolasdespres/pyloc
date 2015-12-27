@@ -245,6 +245,7 @@ def pyloc(target):
             raise AttributeNameError(".".join([module.__name__]+attrs[:i]),
                                      attr)
         else:
+            obj = getattr(obj, "__wrapped__", obj)
             if _is_inspectable(obj):
                 last_inspectable_obj = obj
                 last_inspectable_idx = i

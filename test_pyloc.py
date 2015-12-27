@@ -761,3 +761,23 @@ class TestPyloc(unittest.TestCase):
                                  unicode("pyloc_testmod"),
                                  qualname=unicode("PI"),
                                  locs=(1,0))
+
+    def test_follow_decorated_name(self):
+        modcontent = textwrap.dedent(
+            """\
+            from contextlib import contextmanager
+            @contextmanager
+            def meth():
+                pass
+            class A:
+                @contextmanager
+                def meth(self):
+                    pass
+            """)
+        with self.fixture({"pyloc_testmod":modcontent}) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="meth",
+                                 locs=2)
+            fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
+                                 qualname="A.meth",
+                                 locs=6)

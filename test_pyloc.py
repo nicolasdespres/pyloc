@@ -762,6 +762,7 @@ class TestPyloc(unittest.TestCase):
                                  qualname=unicode("PI"),
                                  locs=(1,0))
 
+    @unittest.skipIf(PY_VERSION < (3, 2, 0), "__wrapped__ is set since 3.2")
     def test_follow_decorated_name(self):
         modcontent = textwrap.dedent(
             """\

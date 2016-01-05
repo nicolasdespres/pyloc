@@ -172,6 +172,10 @@ cd "$ME_DIR"
 ### Check current working directory
 test -d .git || fatal "not run from repository root directory"
 
+### Check that this version is not already used.
+git ls-remote --exit-code --tags origin refs/tags/v$VERSION >/dev/null \
+  && fatal "version $VERSION already released"
+
 ### Check branch
 CURRENT_BRANCH=$(git branch --no-color | sed -ne '/^\* */s///p')
 test "$CURRENT_BRANCH" = "master" || fatal "not on master branch"

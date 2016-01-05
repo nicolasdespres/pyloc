@@ -29,7 +29,7 @@ def get_version():
         if e.errno == errno.ENOENT:
             return subprocess.check_output("./version.sh").decode().strip()
 
-PY_VERSION_SUFFIX = '-%s.%s' % sys.version_info[:2]
+PY_VERSION_SUFFIX = '%s' % (sys.version_info.major,)
 
 setup(
     name="pyloc",

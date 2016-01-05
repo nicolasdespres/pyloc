@@ -103,7 +103,7 @@ else
   PIP=pip
   PYTHON=python
 fi
-TAG=$($PYTHON -c 'import sys; print("-%s.%s" % sys.version_info[:2])')
+TAG=$($PYTHON -c 'import sys; print(sys.version_info.major)')
 ### Test distribution
 $VENV "$DIST_ENV_DIR"
 (

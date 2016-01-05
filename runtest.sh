@@ -26,7 +26,7 @@ unset CDPATH
 # Script main entry point #
 # ======================= #
 
-for version in 2.7.10 3.2.3 3.2.6 3.3.6 3.4.3
+for version in 2.7.10 3.2.3 3.2.6 3.3.6 3.4.3 3.5.1
 do
   PYENV_VERSION=$version python -m unittest test_pyloc
 done

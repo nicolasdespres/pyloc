@@ -70,6 +70,15 @@ on_interrupt()
   exit 2 # Trigger cleanup called by on_exit.
 }
 
+check_version_option()
+{
+  local prog="$1"
+  $prog --version 2>&1 \
+    | grep -q "^pyloc $GIT_VERSION .* (rev: $GIT_REVISION)\$" \
+    || fatal "'$prog --version' report the wrong version"
+}
+
+
 # ========================== #
 # Parse command line options #
 # ========================== #
@@ -123,6 +132,8 @@ $VENV "$DIST_ENV_DIR"
   test "$BUILTIN_REVISION" = "$GIT_REVISION" \
     || fatal "built-ni revision '$BUILTIN_REVISION' not equal to git revision"\
              "'$GIT_REVISION'"
+  check_version_option pyloc
+  check_version_option pyloc$TAG
   $PYTHON -m unittest test_pyloc
 )
 echo "Distcheck successful!!!"

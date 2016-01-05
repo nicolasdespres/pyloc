@@ -102,6 +102,7 @@ else
   VENV=virtualenv
   PIP=pip
   PYTHON=python
+  pip install -U virtualenv
 fi
 TAG=$($PYTHON -c 'import sys; print(sys.version_info.major)')
 ### Test distribution

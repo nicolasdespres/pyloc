@@ -321,6 +321,15 @@ def _build_cli():
         action="store_true",
         help="Print all possible location in case ambiguities")
     parser.add_argument(
+        "--version",
+        action='version',
+        version=("pyloc {v} "
+                 "on python {pyv.major}.{pyv.minor}.{pyv.micro} "
+                 "(rev: {rev})"
+                 .format(v=VERSION,
+                         pyv=sys.version_info,
+                         rev=REVISION)))
+    parser.add_argument(
         "object_name",
         action="store",
         help="A python object named: module[:qualname]")

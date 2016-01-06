@@ -42,6 +42,8 @@ You can see the location of ``Popen.wait`` method in the sub-process package:
 installation path and version)
 
 Note that the object naming syntax is as follow: ``module[:qualname]``
+Since version 0.2.0, syntax ``module[.qualname]`` a la pydoc is also
+supported.
 
 To open it in Emacs you can do:
 

@@ -231,6 +231,30 @@ def _has_same_filename(locs):
     filename = locs[0].filename
     return all(map(lambda x: x.filename == filename, locs))
 
+def _from_pydoc_format(target):
+    """
+    The pydoc target format has no column to separate the package/module part
+    from the object part.
+    """
+    parts = target.split(".")
+    nparts = len(parts)
+    if nparts <= 1:
+        return target
+    for i in range(nparts, 0, -1):
+        mod_part = ".".join(parts[:i])
+        try:
+            importlib.import_module(mod_part)
+        except ImportError:
+            pass
+        else:
+            qual_part = ".".join(parts[i:])
+            if qual_part:
+                return mod_part + ':' + qual_part
+            return mod_part
+    # We cannot import the target at all. Return it as is. The rest of the
+    # program will report the error.
+    return target
+
 def pyloc(target):
     """Return possible location defining ``target`` object.
 
@@ -247,6 +271,8 @@ def pyloc(target):
     """
     if not target:
         raise ValueError("target must be a non-empty string")
+    if ":" not in target:
+        target = _from_pydoc_format(target)
     mod_name, has_qualname, qualname = target.partition(":")
     ### Try to import the module containing the given target.
     try:

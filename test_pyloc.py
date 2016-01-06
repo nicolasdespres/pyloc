@@ -90,12 +90,12 @@ class TestPyloc(unittest.TestCase):
             raise self.failureException(msg)
 
     def assertLocEqual(self, rootdir, expected, modname, qualname=None,
-                       locs=None):
+                       locs=None, sep=":"):
         self.assertFalse(modname in sys.modules,
                          "'%s' is already imported" % (modname,))
         fullname = modname
         if qualname:
-            fullname += ":" + qualname
+            fullname += sep + qualname
         if not os.path.isabs(expected):
             expected = os.path.join(rootdir, expected)
         if locs is None:
@@ -788,3 +788,51 @@ class TestPyloc(unittest.TestCase):
         with save_sys_modules():
             locs = pyloc("importlib.util:source_from_cache")
             self.assertTrue(os.path.exists(locs[0].filename))
+
+    def test_dot_package(self):
+        spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/utils.py",
+                                 "pyloc_testpkg.utils",
+                                 qualname="func", locs=1,
+                                 sep=".")
+
+    def test_dot_package_with_class(self):
+        spec = {
+            "pyloc_testpkg": {
+                "mod1": textwrap.dedent(
+                    """\
+                    class C:
+                        def func():
+                            pass
+                    """),
+            },
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testpkg/mod1.py",
+                                 "pyloc_testpkg.mod1",
+                                 qualname="C.func", locs=2,
+                                 sep=".")
+
+    def test_dot_mod(self):
+        spec = {"pyloc_testmod":"def func(): pass"}
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py",
+                                 "pyloc_testmod",
+                                 qualname="func", locs=1,
+                                 sep=".")
+
+    def test_dot_mod_with_class(self):
+        spec = {
+            "pyloc_testmod": textwrap.dedent(
+                """\
+                class C:
+                    def func():
+                        pass
+                """),
+        }
+        with self.fixture(spec) as fctxt:
+            fctxt.assertLocEqual("pyloc_testmod.py",
+                                 "pyloc_testmod",
+                                 qualname="C.func", locs=2,
+                                 sep=".")

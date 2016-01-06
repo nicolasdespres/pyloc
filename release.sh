@@ -242,5 +242,6 @@ fi
 ### Upload
 if ! $NO_UPLOAD
 then
+  pip install -U twine
   twine upload -r $PYPI_REPO $DIST_TARBALLS
 fi

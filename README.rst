@@ -83,8 +83,8 @@ your are using:
 Installation
 ============
 
-pip
----
+Using pip
+---------
 
 You can install *pyloc* using ``pip`` like this:
 
@@ -98,8 +98,8 @@ or
 
     $ pip3 install pyloc
 
-From source
------------
+Directly from the source
+------------------------
 
 .. code:: bash
 

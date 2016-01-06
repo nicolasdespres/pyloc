@@ -782,3 +782,9 @@ class TestPyloc(unittest.TestCase):
             fctxt.assertLocEqual("pyloc_testmod.py", "pyloc_testmod",
                                  qualname="A.meth",
                                  locs=6)
+
+    @unittest.skipIf(PY_VERSION < (3, 4, 0), "source_from_cache add since 3.4")
+    def test_function_in_frozen_module(self):
+        with save_sys_modules():
+            locs = pyloc("importlib.util:source_from_cache")
+            self.assertTrue(os.path.exists(locs[0].filename))

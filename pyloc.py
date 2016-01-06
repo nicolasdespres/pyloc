@@ -177,10 +177,34 @@ def _is_inspectable(obj):
         or inspect.isfunction(obj) \
         or inspect.ismodule(obj)
 
+def _find_frozen_file(obj, qualname, filename):
+    mo = re.match(r"^<frozen (.*)>$", filename)
+    if mo:
+        try:
+            mod = importlib.import_module(mo.group(1))
+        except ImportError:
+            pass
+        else:
+            filename = mod.__file__
+    return filename
+
+def _find_file_harder(obj, qualname, filename):
+    strategies = (_find_frozen_file,)
+    i = 0
+    while True:
+        if os.path.exists(filename):
+            return filename
+        if i >= len(strategies):
+            raise RuntimeError("failed to get an existing source file name")
+        strategy = strategies[i]
+        filename = strategy(obj, qualname, filename)
+        i += 1
+
 def _get_locations(obj, qualname):
     filename = inspect.getsourcefile(obj)
     if not filename:
         return [Location(inspect.getfile(obj), None, None)]
+    filename = _find_file_harder(obj, qualname, filename)
     if inspect.ismodule(obj):
         return [Location(filename, None, None)]
     if inspect.isclass(obj):

@@ -120,6 +120,15 @@ Hacking
 
 See `HACKING <HACKING.rst>`_ for details.
 
+Release notes
+=============
+
+See the corresponding tag annotation. After cloning you can do:
+
+.. code:: bash
+
+    $ git show v0.1.10
+
 License
 =======
 

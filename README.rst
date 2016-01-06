@@ -123,7 +123,7 @@ See `HACKING <HACKING.rst>`_ for details.
 Release notes
 =============
 
-See the corresponding tag annotation. After cloning you can do:
+See the corresponding tag annotation. After cloning you can do for instance:
 
 .. code:: bash
 

@@ -1,7 +1,5 @@
 # -*- encoding: utf-8 -*-
 """Prints the location of python object definition in your file-system.
-
-Copyright (c) 2015, Nicolas Despres
 """
 
 

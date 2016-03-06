@@ -9,7 +9,7 @@
 #
 #  Check that a distribution tarball install and works properly.
 #
-# Copyright (c) 2015, Nicolas Despres
+# Copyright (c) 2015-2016, Nicolas Desprès
 # Report any problem to <nicolas.despres@gmail.com>
 #::END::
 #

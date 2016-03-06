@@ -144,7 +144,7 @@ License
 
 *pyloc* is released under the term of the
 `Simplified BSD License <http://choosealicense.com/licenses/bsd-2-clause>`_.
-Copyright (c) 2015, Nicolas Desprès
+Copyright (c) 2015-2106, Nicolas Desprès
 All rights reserved.
 
 As noted in the source code, some part has been inspired by code from

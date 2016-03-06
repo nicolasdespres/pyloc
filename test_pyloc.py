@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 """Test 'pyloc' module.
 
-Copyright (c) 2015, Nicolas Despres
+Copyright (c) 2015-2016, Nicolas Desprès
 """
 
 

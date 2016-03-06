@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-# Copyright (c) 2015, Nicolas Despres
+# Copyright (c) 2015-2016, Nicolas Desprès
 
 # Relevant documentation used when writing this file:
 #   https://docs.python.org/3/library/distutils.html

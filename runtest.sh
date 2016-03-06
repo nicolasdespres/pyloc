@@ -10,7 +10,7 @@
 #  Run test suite against several version of python. This script is called
 #  by the release script.
 #
-# Copyright (c) 2015, Nicolas Despres
+# Copyright (c) 2015-2016, Nicolas Desprès
 # Report any problem to <nicolas.despres@gmail.com>
 #::END::
 #

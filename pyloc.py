@@ -342,7 +342,7 @@ _EPILOGUE = """
 environment variables:
  PYLOC_DEFAULT_FORMAT - default output format (default: {default_format})
 
-Copyright (c) 2015, Nicolas Despres
+Copyright (c) 2015-2016, Nicolas Despres
 All right reserved.
 """.format(
     default_format=DEFAULT_LOC_FORMAT,

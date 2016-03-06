@@ -1,4 +1,4 @@
-Copyright (c) 2015, Nicolas Desprès
+Copyright (c) 2015-2016, Nicolas Desprès
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

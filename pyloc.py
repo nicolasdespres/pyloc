@@ -14,8 +14,33 @@ from textwrap import dedent
 import ast
 from collections import namedtuple
 
-VERSION = 'dev'
-REVISION = 'git'
+# =============== #
+# Compute version #
+# =============== #
+
+__version__ = 'dev'
+__revision__ = 'git'
+
+_VERSION_SCRIPT = os.path.join(os.path.dirname(__file__),
+                               "script", "version")
+
+def get_version():
+    if __version__ != 'dev':
+        return __version__
+    import subprocess as sp
+    cmd = [_VERSION_SCRIPT, "get"]
+    return sp.check_output(cmd).decode().strip()
+
+def get_revision():
+    if __revision__ != 'git':
+        return __revision__
+    import subprocess as sp
+    cmd = [_VERSION_SCRIPT, "revision"]
+    return sp.check_output(cmd).decode().strip()
+
+# ===== #
+# PyLoc #
+# ===== #
 
 class PylocError(Exception):
     """Base class of all exception raised by this module."""
@@ -349,11 +374,48 @@ All right reserved.
     )
 
 def _build_cli():
+
+    class LazyVersionAction(argparse.Action):
+        """Replacement for the default 'version' action.
+
+        This action is a lazily evaluate the 'version' keyword argument. The
+        default 'version' action does not provide this feature.
+
+        When called in develop mode some version string might be expensive
+        to compute since they require to probe the underlying code repository.
+        """
+
+        def __init__(self, option_strings, dest, nargs=None, **kwargs):
+            if nargs is not None:
+                raise ValueError("'nargs' is not allowed.")
+            if "choices" in kwargs:
+                raise ValueError("'choices' is not allowed")
+            if "type" in kwargs:
+                raise ValueError("'type' is not allowed")
+            self.version = kwargs.pop('version')
+            super(LazyVersionAction, self).__init__(option_strings, dest,
+                                                    nargs=0,
+                                                    **kwargs)
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            print(self.version())
+            sys.exit(0)
+
     class RawDescriptionWithArgumentDefaultsHelpFormatter(
             argparse.ArgumentDefaultsHelpFormatter,
             argparse.RawDescriptionHelpFormatter,
     ):
         """Mix both formatter."""
+
+    def _version():
+        return \
+            "pyloc {v} "\
+            "on python {pyv.major}.{pyv.minor}.{pyv.micro} "\
+            "(rev: {rev})"\
+            .format(v=get_version(),
+                    pyv=sys.version_info,
+                    rev=get_revision())
+
     parser = argparse.ArgumentParser(
         description=__doc__,
         epilog=dedent(_EPILOGUE),
@@ -370,13 +432,8 @@ def _build_cli():
         help="Print all possible location in case ambiguities")
     parser.add_argument(
         "--version",
-        action='version',
-        version=("pyloc {v} "
-                 "on python {pyv.major}.{pyv.minor}.{pyv.micro} "
-                 "(rev: {rev})"
-                 .format(v=VERSION,
-                         pyv=sys.version_info,
-                         rev=REVISION)))
+        action=LazyVersionAction,
+        version=_version)
     parser.add_argument(
         "object_name",
         action="store",

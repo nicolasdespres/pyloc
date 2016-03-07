@@ -3,17 +3,22 @@
 #::BEGIN::
 # USAGE
 #
-#  release.sh [options] <version>
+#  release.sh [options] [version]
 #
 # DESCRIPTION
 #
 #  Tag the given <version>, create a distribution tarball, check it and
-#  release it on pypi.
+#  release it on pypi. If <version> is not provided no tag are created
+#  and a post-release is packaged.
 #
 # OPTIONS
 #
+#  --no-master
+#   Do not check whether we are on the master branch. Imply --no-push and
+#   --no-upload
+#
 #  --no-push
-#   Do not push tags and local commit to origin
+#   Do not push tags and local commit to origin. Imply --no-upload.
 #
 #  --no-upload
 #   Do not upload release file to the remote repository set by --repo.
@@ -83,20 +88,23 @@ cleanup()
   else
     echo "Cleaning up release procedure..."
   fi
-  rm -rf \
-     "VERSION.txt" \
-     "REVISION.txt"
-  git checkout -- pyloc.py
 }
 
 remove_tag()
 {
-  git tag -d v$VERSION 2>/dev/null || true
+  if [ -n $VERSION ]
+  then
+    git tag -d v$VERSION 2>/dev/null || true
+  fi
 }
 
 # Called when the script exit.
 on_exit()
 {
+  if [ $? -ne 0 ]
+  then
+    remove_tag
+  fi
   cleanup
 }
 
@@ -116,30 +124,39 @@ is_absolute()
 
 check_version_format()
 {
-  grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+$'
+  grep -q -E '^[0-9]+\.[0-9]+\.[0-9]+(rc[0-9]+)?$'
+}
+
+log()
+{
+  echo ">>>>>> "
+  echo ">>>>>> " "$@"
+  echo ">>>>>> "
+}
+
+indirect()
+{
+  local varname="$1"
+  eval echo "\$$varname"
 }
 
 # ========================== #
 # Parse command line options #
 # ========================== #
 
-if [ $# -lt 1 ]
-then
-  usage
-  exit 1
-fi
-
 NO_PUSH=false
 NO_UPLOAD=false
 NO_TEST=false
 NO_DISTCHECK=false
 PYPI_REPO=pypi
+NO_MASTER=false
 TAG_MSG_FILE=
 while [ $# -gt 0 ]
 do
   arg="$1"
   case "$arg" in
-    --no-push) NO_PUSH=true;;
+    --no-master) NO_MASTER=true; NO_PUSH=true, NO_UPLOAD=true;;
+    --no-push) NO_PUSH=true; NO_UPLOAD=true;;
     --no-upload) NO_UPLOAD=true;;
     --no-test) NO_TEST=true;;
     --no-distcheck) NO_DISTCHECK=true;;
@@ -152,8 +169,18 @@ do
   shift
 done
 
-VERSION="$1"
-check_version_format <<< "$VERSION" || fatal "invalid version format '$VERSION'"
+if [ $# -eq 0 ]
+then
+  VERSION=""
+elif [ $# -eq 1 ]
+then
+  VERSION="$1"
+  check_version_format <<< "$VERSION" \
+    || fatal "invalid version format '$VERSION'"
+else
+  usage
+  exit 1
+fi
 
 # ======================= #
 # Main script entry point #
@@ -167,23 +194,18 @@ else
   ME="$PWD/$0"
 fi
 ME_DIR=$(dirname "$ME")
+SCRIPT_DIR="$ME_DIR/script"
+DIST_DIR="$ME_DIR/dist"
 cd "$ME_DIR"
 
 ### Check current working directory
 test -d .git || fatal "not run from repository root directory"
 
-### Check that this version is not already used.
-git ls-remote --exit-code --tags origin refs/tags/v$VERSION >/dev/null \
-  && fatal "version $VERSION already released"
-
 ### Check branch
-CURRENT_BRANCH=$(git branch --no-color | sed -ne '/^\* */s///p')
-test "$CURRENT_BRANCH" = "master" || fatal "not on master branch"
-
-### Run test
-if ! $NO_TEST
+if ! $NO_MASTER
 then
-  ./runtest.sh 2>&1 | sed -e 's/^/runtest.sh: /'
+  CURRENT_BRANCH=$(git branch --no-color | sed -ne '/^\* */s///p')
+  test "$CURRENT_BRANCH" = "master" || fatal "not on master branch"
 fi
 
 ### Cleanup release/build directories
@@ -194,43 +216,65 @@ rm -rf dist build pyloc.egg-info
 
 ### Tag repository
 remove_tag
-GIT_TAG_ARGS="-a"
-test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
-git tag $GIT_TAG_ARGS v$VERSION master
+if [ -n "$VERSION" ]
+then
+  GIT_TAG_ARGS="-a"
+  test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
+  log "Tagging $VERSION"
+  git tag $GIT_TAG_ARGS v$VERSION HEAD
+fi
 
-### Generate and check version
-GIT_VERSION=$("$ME_DIR/version.sh")
-echo "$GIT_VERSION" > VERSION.txt
-check_version_format <<< "$GIT_VERSION" \
-  || fatal "invalid version '$GIT_VERSION'"
-
-### Generate revision
-GIT_REVISION=$(git rev-parse HEAD)
-echo "$GIT_REVISION" > REVISION.txt
-
-### Include version and revision in the module.
-sed -i '' -e "s/^VERSION = 'dev'$/VERSION = '$GIT_VERSION'/" pyloc.py
-sed -i '' -e "s/^REVISION = 'git'$/REVISION = '$GIT_REVISION'/" pyloc.py
+### Get version
+GIT_VERSION=$(python setup.py --version 2>/dev/null)
+log "Release version is: ${GIT_VERSION}"
 
 ### Build distribution
-echo ">>> Creating source distribution"
-python setup.py sdist
-echo ">>> Creating python2 binary distribution"
+log "Creating source distribution"
+python setup.py sdist --formats zip,gztar
+log "Creating python2 binary distribution"
 python setup.py bdist_wheel
-echo ">>> Creating python3 binary distribution"
+log "Creating python3 binary distribution"
 python3 setup.py bdist_wheel
 
 ### List distribution files
-DIST_TARBALLS=$(find "$ME_DIR/dist" -type f -name "pyloc-${GIT_VERSION}*")
+SDIST_PKGS=$(find "$DIST_DIR" -type f \
+                  -name "pyloc-${GIT_VERSION}.tar.gz" \
+                  -o -name "pyloc-${GIT_VERSION}.zip")
+WHEEL2_PKGS=$(find "$DIST_DIR" -type f -name "pyloc-${GIT_VERSION}-py2-*.whl")
+WHEEL3_PKGS=$(find "$DIST_DIR" -type f -name "pyloc-${GIT_VERSION}-py3-*.whl")
+
+### List relevant tox environments for each package.
+SDIST_ENVS='ALL'
+WHEEL2_ENVS=$(tox --listenvs | grep '^py2' | tr '\n' ',')
+WHEEL3_ENVS=$(tox --listenvs | grep '^py3' | tr '\n' ',')
 
 ### Test distribution
 if ! $NO_DISTCHECK
 then
-  for dist_tarball in $DIST_TARBALLS
+  pip install --upgrade tox
+  for pkg_list in SDIST WHEEL2 WHEEL3
   do
-    ./distcheck.sh "$GIT_VERSION" "$GIT_REVISION" "$dist_tarball" 2>&1 \
-      | sed -e 's/^/distcheck.sh: /'
+    for pkg in $(indirect "${pkg_list}_PKGS")
+    do
+      envs=$(indirect "${pkg_list}_ENVS")
+      log "Checking package '$pkg' against environment '$envs'"
+      tox_opts=''
+      $NO_TEST && tox_opts="$tox_opts --notest"
+      [ $envs != 'ALL' ] && tox_opts="$tox_opts -e $envs"
+      tox $tox_opts --installpkg "$pkg"
+    done
   done
+fi
+
+### Check working copy is not dirty.
+test -z "$(git status --porcelain 2>/dev/null)" \
+  || fatal "working copy is dirty"
+
+### Check that this version is not already used.
+if [ -n "$VERSION" ]
+then
+  git ls-remote --exit-code --tags origin refs/tags/v$VERSION >/dev/null \
+    && fatal "version $VERSION already released"
 fi
 
 ### Push
@@ -242,6 +286,8 @@ fi
 ### Upload
 if ! $NO_UPLOAD
 then
-  pip install -U twine
+  pip install --upgrade twine
+  # We use twine to upload because it uses an encrypted connection
+  # protecting the username/password whereas setuptools do not.
   twine upload -r $PYPI_REPO $DIST_TARBALLS
 fi

@@ -1,0 +1,141 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+"""Compute the version from the repository.
+"""
+
+import sys
+import argparse
+import subprocess
+import re
+from collections import namedtuple
+
+def none_or_int(v):
+    if v is None:
+        return None
+    else:
+        return int(v)
+
+class Version(namedtuple('Version', "major minor micro rc patch dirty")):
+
+    PATTERN = r"""
+    ^v(?P<major>\d+)
+    \.
+    (?P<minor>\d+)
+    \.
+    (?P<micro>\d+)
+    (?:rc(?P<rc>\d+))?
+    (?:-(?P<patch>\d+)-g[0-9a-f]+)?
+    (?P<dirty>-dirty)?$
+    """
+
+    @classmethod
+    def from_string(cls, string):
+        rx = re.compile(cls.PATTERN, re.VERBOSE)
+        mo = rx.match(string)
+        rc = mo.group("rc")
+        if rc is not None:
+            rc = int(rc)
+        return cls(major=int(mo.group("major")),
+                   minor=int(mo.group("minor")),
+                   micro=int(mo.group("micro")),
+                   rc=none_or_int(mo.group("rc")),
+                   patch=none_or_int(mo.group("patch")),
+                   dirty=bool(mo.group("dirty")))
+
+    def __str__(self):
+        return self.to_str()
+
+    def to_str(self, no_dirty=False):
+        s = ["%s.%s.%s"%(self.major, self.minor, self.micro)]
+        if self.rc:
+            s.append("rc%d"%(self.rc,))
+        if self.patch:
+            s.append("-%d"%(self.patch,))
+        if self.dirty and not no_dirty:
+            s.append("-dirty")
+        return "".join(s)
+
+def git_describe(from_commit="HEAD"):
+    cmd = ["git", "describe", "--long", "--match", "v*"]
+    if from_commit == 'HEAD':
+        cmd.append("--dirty")
+    else:
+        cmd.append(from_commit)
+    output = subprocess.check_output(cmd).decode().strip()
+    return Version.from_string(output)
+
+def git_revision():
+    cmd = ["git", "rev-parse", "HEAD"]
+    return subprocess.check_output(cmd).decode().strip()
+
+def get_version():
+    cmd = [sys.executable, '-m', 'pyloc', '--version']
+    return subprocess.check_output(cmd).decode()
+
+def py_version():
+    return "{pyv.major}.{pyv.minor}.{pyv.micro}".format(pyv=sys.version_info)
+
+def check_version(string):
+    pattern = r"^pyloc \d+.\d+\.\d+(rc\d+|-\d+)?(-dirty)? "\
+              "on python %(py_version)s "\
+              "\(rev: [0-9a-f]{6,40}\)\n"\
+              %{'py_version': py_version(),}
+    rx = re.compile(pattern, re.MULTILINE)
+    if rx.match(string) is None:
+        print("invalid version string '%s'"%(string,))
+        return 1
+    return 0
+
+def build_cli():
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    subparsers = parser.add_subparsers(help="sub-commands help")
+    ### get
+    get_parser = subparsers.add_parser(
+        "get",
+        help="Print package version number")
+    get_parser.add_argument(
+        "--from-commit",
+        action="store",
+        default='HEAD',
+        help="Search most recent tag that is reachable from this commit.")
+    get_parser.add_argument(
+        "--no-dirty",
+        action="store_true",
+        help="Do not add the dirty tag on version string.")
+    get_parser.set_defaults(cmd="get")
+    ### revision
+    revision_parser = subparsers.add_parser(
+        "revision",
+        help="Print package revision number")
+    revision_parser.set_defaults(cmd="revision")
+    ### check
+    check_parser = subparsers.add_parser(
+        "check",
+        help="Check --version option of the package")
+    check_parser.set_defaults(cmd="check")
+    return parser
+
+def get_main(options):
+    v = git_describe(from_commit=options.from_commit)
+    print(v.to_str(no_dirty=options.no_dirty))
+    return 0
+
+def revision_main(options):
+    print(git_revision())
+    return 0
+
+def check_main(options):
+    return check_version(get_version())
+
+def main(argv):
+    cli = build_cli()
+    options = cli.parse_args(argv[1:])
+    this_module = sys.modules[__name__]
+    cmd_main = getattr(this_module, "{}_main".format(options.cmd))
+    del options.cmd
+    return cmd_main(options)
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

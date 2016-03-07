@@ -29,13 +29,18 @@ the test suite against several version of python like this:
       PYENV_VERSION=$v python -m unittest test_pyloc
     done
 
+or using ``tox`` (make sure all python environment set in ``tox.ini``
+are installed in ``pyenv`` and that they are made globally available using for
+instance: ``pyenv global 2.7.11 3.5.1 3.4.3 3.3.6 3.2.6``)
+
+.. code:: bash
+
+    tox
+
 How to make a release
 ---------------------
 
-1. Update python version in runtests.sh. We use the last micro release
-   for each pair of major.minor version supported.
-
-2. Write a tag message containing the release notes. You can get the
+#. Write a tag message containing the release notes. You can get the
    list of new commits since the last release using this command:
 
    .. code:: bash
@@ -45,18 +50,29 @@ How to make a release
    Store you tag message in a file called '/tmp/pyloc.tagmsg' for
    instance.
 
-3. Make sure local commits are pushed.
+#. Make sure local commits are pushed.
 
-4. Check that Travis.CI has successfully checked the last commit.
+#. Check that Travis.CI has successfully checked the last commit.
 
-5. Make a test release on testpypi.python.org server and check that it
+#. Choose a release version and store it in a ``VERSION`` shell variable:
+
+   * Release number are of the form X.Y.Z.
+   * Pre-release number are of the form X.Y.ZrcN
+   * Post-release number are of the form X.Y.Z-N. This kind of release
+     is supported only for continuous integration system and are *not
+     tagged*. Do not pass any version number or tag message as
+     argument to the release script to make such a release.
+     If you want to make a bug fix release just increment the
+     Z number.
+
+#. Make a test release on testpypi.python.org server and check that it
    is ok (mainly the information text should be well formatted).
 
    .. code:: bash
 
        $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypitest --no-push $VERSION
 
-6. Make the release:
+#. Make the release:
 
    .. code:: bash
 

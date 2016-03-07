@@ -14,3 +14,10 @@
 # Coverage
 /.coverage
 /.coverage-html/
+
+# Tox
+/.tox/
+
+# Generated when testing rendering of documentation files.
+/HACKING.html
+/README.html

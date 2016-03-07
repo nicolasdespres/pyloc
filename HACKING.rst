@@ -50,7 +50,7 @@ How to make a release
 4. Check that Travis.CI has successfully checked the last commit.
 
 5. Make a test release on testpypi.python.org server and check that it
-   is ok (mainly the .
+   is ok (mainly the information text should be well formatted).
 
    .. code:: bash
 

@@ -2,7 +2,7 @@
 Welcome to pyloc
 ================
 
-|ci-status| |cov|
+|ci-status| |cov| |version| |versions| |download| |stability| |license|
 
 *pyloc* prints the location of the definition of any python object in
 your file-system.
@@ -18,8 +18,6 @@ The object can be a package, module, class, method or function.
 *pyloc* makes some further efforts to figure out the line and column
 number and its output is formatted so that it can easily be passed
 to ``emacsclient`` or ``vi``.
-
-*pyloc* works with Python 2.7, 3.2, 3.3, 3.4 and 3.5.
 
 Examples
 ========
@@ -161,3 +159,23 @@ distribution (see the LICENSE file in the python distribution)
 .. |cov| image:: https://coveralls.io/repos/github/nicolasdespres/pyloc/badge.svg?branch=master
    :target: https://coveralls.io/github/nicolasdespres/pyloc?branch=master
    :alt: Coverage Status
+
+.. |version| image:: https://img.shields.io/pypi/v/pyloc.svg
+   :target: https://pypi.python.org/pypi/pyloc
+   :alt: Last released version
+
+.. |versions| image:: https://img.shields.io/pypi/pyversions/pyloc.svg
+   :target: https://pypi.python.org/pypi/pyloc/
+   :alt: Supported python versions
+
+.. |download| image:: https://img.shields.io/pypi/dd/pyloc.svg
+   :target: https://pypi.python.org/pypi/pyloc/
+   :alt: Download rate
+
+.. |stability| image:: https://img.shields.io/pypi/status/pyloc.svg
+    :target: https://pypi.python.org/pypi/pyloc
+    :alt: Package stability
+
+.. |license| image:: https://img.shields.io/pypi/l/pyloc.svg
+    :target: https://pypi.python.org/pypi/pyloc
+    :alt: License

@@ -2,9 +2,7 @@
 Welcome to pyloc
 ================
 
-.. image:: https://api.travis-ci.org/nicolasdespres/pyloc.svg?branch=master
-   :target: https://travis-ci.org/nicolasdespres/pyloc
-   :alt: Build Status
+|ci-status|
 
 *pyloc* prints the location of the definition of any python object in
 your file-system.
@@ -151,3 +149,11 @@ As noted in the source code, some part has been inspired by code from
 the ``inspect`` module written by Ka-Ping Yee <ping@lfw.org> and
 Yury Selivanov <yselivanov@sprymix.com> form the Python 3.4.3
 distribution (see the LICENSE file in the python distribution)
+
+
+
+
+
+.. |ci-status| image:: https://api.travis-ci.org/nicolasdespres/pyloc.svg?branch=master
+   :target: https://travis-ci.org/nicolasdespres/pyloc
+   :alt: Build Status

@@ -11,6 +11,11 @@ sudo: false
 install:
     - pip install coveralls coverage
 script:
-    - coverage run --source=pyloc.py setup.py test
+    - PY_VERSION=$(python -c 'from sys import version_info as vi; print("%d%d"%(vi.major,vi.minor))')
+    - if [ $PY_VERSION = 32 ]; then
+        python -m unittest -v test_pyloc;
+      else
+        coverage run --source=pyloc.py setup.py test;
+      fi
 after_success:
     - coveralls

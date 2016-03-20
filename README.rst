@@ -2,7 +2,7 @@
 Welcome to pyloc
 ================
 
-|ci-status|
+|ci-status| |cov|
 
 *pyloc* prints the location of the definition of any python object in
 your file-system.
@@ -157,3 +157,7 @@ distribution (see the LICENSE file in the python distribution)
 .. |ci-status| image:: https://api.travis-ci.org/nicolasdespres/pyloc.svg?branch=master
    :target: https://travis-ci.org/nicolasdespres/pyloc
    :alt: Build Status
+
+.. |cov| image:: https://coveralls.io/repos/github/nicolasdespres/pyloc/badge.svg?branch=master
+   :target: https://coveralls.io/github/nicolasdespres/pyloc?branch=master
+   :alt: Coverage Status

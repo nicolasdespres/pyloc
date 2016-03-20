@@ -2,7 +2,7 @@
 Welcome to pyloc
 ================
 
-|ci-status| |cov| |version| |versions|
+|ci-status| |cov| |version| |versions| |download|
 
 *pyloc* prints the location of the definition of any python object in
 your file-system.
@@ -167,3 +167,7 @@ distribution (see the LICENSE file in the python distribution)
 .. |versions| image:: https://img.shields.io/pypi/pyversions/pyloc.svg
    :target: https://pypi.python.org/pypi/pyloc/
    :alt: Supported python versions
+
+.. |download| image:: https://img.shields.io/pypi/dd/pyloc.svg
+   :target: https://pypi.python.org/pypi/pyloc/
+   :alt: Download rate

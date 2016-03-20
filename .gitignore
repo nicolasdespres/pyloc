@@ -10,3 +10,7 @@
 /*.egg-info/
 /*.egg
 /.hunittest/
+
+# Coverage
+/.coverage
+/.coverage-html/

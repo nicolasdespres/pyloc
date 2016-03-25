@@ -155,6 +155,7 @@ setup(
     license="Simplified BSD",
     keywords='utility',
     url='https://github.com/nicolasdespres/pyloc',
+    platforms=["any"],
     # Pick some from https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers = [
         'Development Status :: 4 - Beta',

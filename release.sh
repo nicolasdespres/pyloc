@@ -228,6 +228,14 @@ fi
 GIT_VERSION=$(python setup.py --version 2>/dev/null)
 log "Release version is: ${GIT_VERSION}"
 
+### Check previous release is older
+PREV_VERSION=$(python "$SCRIPT_DIR/version" get --from-commit 'HEAD^')
+log "Check previsous version '$PREV_VERSION' older than '$GIT_VERSION'"
+python <<EOF
+from pkg_resources import parse_version
+assert parse_version('$PREV_VERSION') < parse_version('$GIT_VERSION')
+EOF
+
 ### Build distribution
 log "Creating source distribution"
 python setup.py sdist --formats zip,gztar

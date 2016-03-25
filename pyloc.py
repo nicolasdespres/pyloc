@@ -354,7 +354,7 @@ def format_loc(loc, format=DEFAULT_LOC_FORMAT):
         s += loc.filename
         return s
     elif format == 'human':
-        s = "Filename: %s" %(filename,)
+        s = "Filename: %s" %(loc.filename,)
         if loc.line:
             s += "\nLine: %d" %(loc.line,)
         if loc.column:
@@ -459,7 +459,7 @@ def _main():
         else:
             if len(locs) > 1:
                 assert _has_same_filename(locs)
-                locs_to_print = [Location(locs[0].filename, None, None)]
+                locs_to_print = [locs[0]]
             else:
                 locs_to_print = locs
         for loc in locs_to_print:

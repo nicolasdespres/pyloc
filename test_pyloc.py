@@ -28,6 +28,16 @@ from pyloc import AttributeNameError
 
 PY_VERSION = tuple(map(int, sysconfig.get_config_var('py_version').split(".")))
 
+def none_or_int(v):
+    if v is None:
+        return None
+    else:
+        return int(v)
+
+def close_if_not_none(o):
+    if o is not None:
+        o.close()
+
 @contextlib.contextmanager
 def save_sys_modules():
     saved_modules = sys.modules.copy()
@@ -76,7 +86,9 @@ class FixtureCtxt(object):
     def assertLocEqual(self, *args, **kwargs):
         self.testcase.assertLocEqual(self.tmpdir, *args, **kwargs)
 
-class TestPyloc(unittest.TestCase):
+class CompatAssert(object):
+    """Collection of assert method compatible across various python version.
+    """
 
     # Duplicated from unittest.TestCase because it is named assertRegexpMatches
     # in python 2.7.x
@@ -88,6 +100,8 @@ class TestPyloc(unittest.TestCase):
             msg = msg or "Regex didn't match"
             msg = '%s: %r not found in %r' % (msg, expected_regex.pattern, text)
             raise self.failureException(msg)
+
+class TestPyloc(unittest.TestCase, CompatAssert):
 
     def assertLocEqual(self, rootdir, expected, modname, qualname=None,
                        locs=None, sep=":"):
@@ -836,3 +850,201 @@ class TestPyloc(unittest.TestCase):
                                  "pyloc_testmod",
                                  qualname="C.func", locs=2,
                                  sep=".")
+
+class TestCLI(unittest.TestCase):
+    """Base class of command line interface test case.
+
+    All test cases related to CLI should inherit from this class.
+    """
+
+    def setUp(self):
+        super(TestCLI, self).setUp()
+        self.pyloc = None
+        self.tmpdir = os.path.realpath(tempfile.mkdtemp())
+
+    def tearDown(self):
+        if self.pyloc is not None:
+            close_if_not_none(self.pyloc.stdout)
+            close_if_not_none(self.pyloc.stderr)
+        shutil.rmtree(self.tmpdir)
+        super(TestCLI, self).tearDown()
+
+    def run_pyloc(self, *args, **kwargs):
+        # Import it from here because it is used as a fixture by other test
+        # case.
+        import subprocess as sp
+        exe = sys.executable
+        cmd = [exe, '-m', 'pyloc']
+        cmd.extend(args)
+        env = kwargs.get("env")
+        if env is None:
+            env = os.environ.copy()
+        pythonpath = kwargs.get("pythonpath")
+        if pythonpath is not None:
+            env.setdefault("PYTHONPATH", "")
+            env["PYTHONPATH"] += ":"+":".join(pythonpath)
+        self.pyloc = sp.Popen(cmd,
+                              executable=exe,
+                              stdout=sp.PIPE,
+                              stderr=sp.PIPE,
+                              universal_newlines=True,
+                              env=env)
+        self.pyloc.wait()
+        return self.pyloc.returncode
+
+    def gen_fixture(self, spec):
+        gen_fixture_in(spec, self.tmpdir)
+
+class CLITestMethods(CompatAssert):
+    """Collection of test method useful for any format."""
+
+    def test_format(self):
+        self.gen_fixture({"testmod":""})
+        self.assertEqual(self.run_pyloc('--format', self.FORMAT,
+                                        'testmod', pythonpath=[self.tmpdir]), 0)
+        self.assertOutput(self.pyloc.stdout.read(),
+                          [(os.path.join(self.tmpdir, "testmod.py"),
+                            None,
+                            None)])
+
+    def test_format_multi_with_all(self):
+        modcontent = textwrap.dedent(
+            """\
+            cond = True
+            if cond:
+                class C(object):
+                    pass
+            else:
+                class C(object):
+                    pass
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        self.gen_fixture(spec)
+        pyloc_rc = self.run_pyloc('--format', self.FORMAT, '--all',
+                                  'pyloc_testmod.C',
+                                  pythonpath=[self.tmpdir])
+        self.assertMultiLineEqual("", self.pyloc.stderr.read())
+        self.assertEqual(pyloc_rc, 0)
+        modpathname = os.path.join(self.tmpdir, "pyloc_testmod.py")
+        pyloc_stdout = self.pyloc.stdout.read()
+        self.assertOutput(pyloc_stdout,
+                          [(modpathname, 3, 4),
+                           (modpathname, 6, 4)])
+
+    def test_format_multi_without_all(self):
+        modcontent = textwrap.dedent(
+            """\
+            cond = True
+            if cond:
+                class C(object):
+                    pass
+            else:
+                class C(object):
+                    pass
+            """)
+        spec = {"pyloc_testmod":modcontent}
+        self.gen_fixture(spec)
+        pyloc_rc = self.run_pyloc('--format', self.FORMAT,
+                                  'pyloc_testmod.C',
+                                  pythonpath=[self.tmpdir])
+        self.assertMultiLineEqual("", self.pyloc.stderr.read())
+        self.assertEqual(pyloc_rc, 0)
+        modpathname = os.path.join(self.tmpdir, "pyloc_testmod.py")
+        pyloc_stdout = self.pyloc.stdout.read()
+        self.assertOutput(pyloc_stdout,
+                          [(modpathname, 3, 4)])
+
+    def test_unknown_root_module(self):
+        pyloc_rc = self.run_pyloc('--format', self.FORMAT,
+                                  'doesnotexist')
+        self.assertRegexp(self.pyloc.stderr.read(),
+                         r"^pyloc: failed to import 'doesnotexist' ")
+        self.assertEqual(pyloc_rc, 1)
+        self.assertMultiLineEqual("", self.pyloc.stdout.read())
+
+    def test_unknown_module_in_package(self):
+        spec = {"pyloc_testpkg":{"utils":"def func(): pass"}}
+        self.gen_fixture(spec)
+        pyloc_rc = self.run_pyloc('--format', self.FORMAT,
+                                  'pyloc_testpkg.doesnotexist',
+                                  pythonpath=[self.tmpdir])
+        self.assertRegexp(self.pyloc.stderr.read(),
+                         r"^pyloc: cannot get attribute 'doesnotexist' "\
+                         "from 'pyloc_testpkg'")
+        self.assertEqual(pyloc_rc, 1)
+        self.assertMultiLineEqual("", self.pyloc.stdout.read())
+
+class TestCLIHuman(TestCLI, CLITestMethods):
+
+    FORMAT = 'human'
+
+    def assertOutput(self, output, locs):
+        iloc = 0
+        lines = output.splitlines()
+        # We need a dictionary because python 2.7 does not have 'nonlocal'
+        # keyword
+        d = {'iline': 0 }
+        def _nextline():
+            try:
+                line = lines[d['iline']]
+            except IndexError:
+                return None
+            d['iline'] += 1
+            return line.rstrip("\n")
+        while d['iline'] < len(lines):
+            line = _nextline()
+            mo = re.match(r"^Filename: (.+)$", line)
+            if mo is None:
+                self.fail("missing filename in human output")
+            filename = mo.group(1)
+            line_no = None
+            line = _nextline()
+            if line is not None:
+                mo = re.match(r"^Line: (\d+)$", line)
+                if mo is not None:
+                    line_no = int(mo.group(1))
+            col_no = None
+            line = _nextline()
+            if line is not None:
+                mo = re.match(r"^Column: (\d+)$", line)
+                if mo is not None:
+                    col_no = int(mo.group(1))
+            actual_loc = (filename, line_no, col_no)
+            try:
+                expected_loc = locs[iloc]
+            except IndexError:
+                self.fail("expected only %d locations, "
+                          "missing %dth location: %r"
+                          %(len(locs), iloc, actual_loc))
+            else:
+                self.assertTupleEqual(expected_loc, actual_loc)
+            iloc += 1
+
+class TestCLIEmacs(TestCLI, CLITestMethods):
+
+    FORMAT = 'emacs'
+
+    def assertOutput(self, output, locs):
+        for iloc, line in enumerate(output.splitlines()):
+            line = line.rstrip("\n")
+            mo = re.match(
+                r"^(\+(?P<line>\d+)(:(?P<col>\d+))? )?(?P<filename>.+)$",
+                line)
+            if mo is None:
+                self.fail("missing filename in human output")
+            filename = mo.group("filename")
+            line_no = none_or_int(mo.group("line"))
+            col_no = none_or_int(mo.group("col"))
+            actual_loc = (filename, line_no, col_no)
+            try:
+                expected_loc = locs[iloc]
+            except IndexError:
+                self.fail("expected only %d locations, "
+                          "missing %dth location: %r"
+                          %(len(locs), iloc, actual_loc))
+            else:
+                self.assertTupleEqual(expected_loc, actual_loc)
+
+class TestCLIVi(TestCLIEmacs):
+
+    FORMAT = 'vi'

@@ -70,10 +70,10 @@ How to make a release
 
    .. code:: bash
 
-       $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypitest --no-push $VERSION
+       $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypitest --upload $VERSION
 
 #. Make the release:
 
    .. code:: bash
 
-       $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypi $VERSION
+       $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypi --upload --push $VERSION

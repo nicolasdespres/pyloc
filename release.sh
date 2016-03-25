@@ -14,13 +14,12 @@
 # OPTIONS
 #
 #  --no-master
-#   Do not check whether we are on the master branch. Imply --no-push and
-#   --no-upload
+#   Do not check whether we are on the master branch.
 #
-#  --no-push
-#   Do not push tags and local commit to origin. Imply --no-upload.
+#  --push
+#   Do not push tags and local commit to origin.
 #
-#  --no-upload
+#  --upload
 #   Do not upload release file to the remote repository set by --repo.
 #
 #  --no-test
@@ -144,8 +143,8 @@ indirect()
 # Parse command line options #
 # ========================== #
 
-NO_PUSH=false
-NO_UPLOAD=false
+PUSH=false
+UPLOAD=false
 NO_TEST=false
 NO_DISTCHECK=false
 PYPI_REPO=pypi
@@ -155,9 +154,9 @@ while [ $# -gt 0 ]
 do
   arg="$1"
   case "$arg" in
-    --no-master) NO_MASTER=true; NO_PUSH=true, NO_UPLOAD=true;;
-    --no-push) NO_PUSH=true; NO_UPLOAD=true;;
-    --no-upload) NO_UPLOAD=true;;
+    --no-master) NO_MASTER=true;;
+    --push) PUSH=true;;
+    --upload) UPLOAD=true;;
     --no-test) NO_TEST=true;;
     --no-distcheck) NO_DISTCHECK=true;;
     --repo=*) PYPI_REPO=$(sed -e 's/^--repo=//' <<< "$arg");;
@@ -286,16 +285,16 @@ then
 fi
 
 ### Push
-if ! $NO_PUSH
+if $PUSH
 then
   git push --follow-tags origin master
 fi
 
 ### Upload
-if ! $NO_UPLOAD
+if $UPLOAD
 then
   pip install --upgrade twine
   # We use twine to upload because it uses an encrypted connection
   # protecting the username/password whereas setuptools do not.
-  twine upload -r $PYPI_REPO $DIST_TARBALLS
+  twine upload -r $PYPI_REPO $SDIST_PKGS $WHEEL2_PKGS $WHEEL3_PKGS
 fi

@@ -3,5 +3,4 @@ include HACKING.rst
 include LICENSE.txt
 include VERSION.txt
 include REVISION.txt
-include development.txt
 include tox.ini

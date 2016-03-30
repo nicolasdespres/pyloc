@@ -1,6 +1,7 @@
 [run]
+data_file = .coverage
 branch = True
 parallel = True
 [html]
-directory = .covhtml
+directory = .coverage-html
 title = Pyloc coverage report

@@ -10,7 +10,12 @@ sudo: false
 install:
     - pip install coveralls coverage
 script:
-    - coverage run --source=pyloc.py setup.py test;
+    - coverage erase
+    - echo 'import coverage; coverage.process_startup()' > sitecustomize.py
+    - export COVERAGE_PROCESS_START=.coveragerc
+    - coverage run setup.py test;
+    - rm sitecustomize.py
 after_success:
     - coverage combine
-    - coveralls
+    - coverage report
+    - coveralls --verbose

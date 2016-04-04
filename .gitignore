@@ -9,7 +9,6 @@
 # Python egg metadata, regenereated from source files by setuptools.
 /*.egg-info/
 /*.egg
-/.hunittest/
 
 # Generate by the Coverage package tool
 /.coverage

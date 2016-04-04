@@ -1048,3 +1048,29 @@ class TestCLIEmacs(TestCLI, CLITestMethods):
 class TestCLIVi(TestCLIEmacs):
 
     FORMAT = 'vi'
+
+class TestVersion(unittest.TestCase):
+
+    def setUp(self):
+        super(TestVersion, self).setUp()
+
+    def tearDown(self):
+        super(TestVersion, self).tearDown()
+
+    def test_version(self):
+        # Import it from here because it is used as a fixture by other test
+        # case.
+        import subprocess as sp
+        exe = sys.executable
+        cmd = [exe,
+               os.path.join(os.path.dirname(__file__), "script", "version"),
+               "check"]
+        proc = sp.Popen(cmd,
+                        executable=exe,
+                        stdout=sp.PIPE,
+                        stderr=sp.STDOUT,
+                        universal_newlines=True)
+        proc.wait()
+        for line in proc.stdout:
+            sys.stdout.write(line)
+        self.assertEqual(proc.returncode, 0)

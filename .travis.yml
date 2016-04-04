@@ -14,7 +14,7 @@ script:
     - echo 'import coverage; coverage.process_startup()' > sitecustomize.py
     - export COVERAGE_PROCESS_START=.coveragerc
     - coverage run setup.py test;
-    - rm sitecustomize.py
+    - rm -f sitecustomize.py sitecustomize.pyc
 after_success:
     - coverage combine
     - coverage report

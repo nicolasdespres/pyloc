@@ -11,9 +11,11 @@
 /*.egg
 /.hunittest/
 
-# Coverage
+# Generate by the Coverage package tool
 /.coverage
+/.coverage.*
 /.coverage-html/
+/sitecustomize.py
 
 # Tox
 /.tox/

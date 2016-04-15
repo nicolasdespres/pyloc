@@ -21,7 +21,7 @@
 #   Do not check whether we are on the master branch.
 #
 #  --push
-#   Do not push tags and local commit to origin.
+#   Push tags and local commit to origin. If not set, nothing is pushed.
 #
 #  --upload
 #   Do not upload release file to the remote repository set by --repo.

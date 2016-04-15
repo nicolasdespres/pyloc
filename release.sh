@@ -291,7 +291,8 @@ fi
 ### Push
 if $PUSH
 then
-  git push --follow-tags origin master
+  git push --no-follow-tags origin master
+  git push origin v$VERSION
 fi
 
 ### Upload

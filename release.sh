@@ -94,7 +94,7 @@ remove_tag()
 {
   if [ -n $VERSION ]
   then
-    git tag -d v$VERSION 2>/dev/null || true
+    git tag -d $TAG 2>/dev/null || true
   fi
 }
 
@@ -177,6 +177,7 @@ then
   VERSION="$1"
   check_version_format <<< "$VERSION" \
     || fatal "invalid version format '$VERSION'"
+  TAG="v$VERSION"
 else
   usage
   exit 1
@@ -224,7 +225,7 @@ then
   GIT_TAG_ARGS="-a"
   test -n "$TAG_MSG_FILE" && GIT_TAG_ARGS="$GIT_TAG_ARGS -F $TAG_MSG_FILE"
   log "Tagging $VERSION"
-  git tag $GIT_TAG_ARGS v$VERSION HEAD
+  git tag $GIT_TAG_ARGS $TAG HEAD
 fi
 
 ### Get version
@@ -284,7 +285,7 @@ test -z "$(git status --porcelain 2>/dev/null)" \
 ### Check that this version is not already used.
 if [ -n "$VERSION" ]
 then
-  git ls-remote --exit-code --tags origin refs/tags/v$VERSION >/dev/null \
+  git ls-remote --exit-code --tags origin refs/tags/$TAG >/dev/null \
     && fatal "version $VERSION already released"
 fi
 
@@ -292,7 +293,7 @@ fi
 if $PUSH
 then
   git push --no-follow-tags origin master
-  git push origin v$VERSION
+  git push origin $TAG
 fi
 
 ### Upload

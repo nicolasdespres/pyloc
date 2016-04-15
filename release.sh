@@ -13,6 +13,10 @@
 #
 # OPTIONS
 #
+#  --clean
+#   Starts with a clean environment. It deletes any remaining files or
+#   directories created from a previous run.
+#
 #  --no-master
 #   Do not check whether we are on the master branch.
 #
@@ -149,11 +153,13 @@ NO_TEST=false
 NO_DISTCHECK=false
 PYPI_REPO=pypi
 NO_MASTER=false
+CLEAN=false
 TAG_MSG_FILE=
 while [ $# -gt 0 ]
 do
   arg="$1"
   case "$arg" in
+    --clean) CLEAN=true;;
     --no-master) NO_MASTER=true;;
     --push) PUSH=true;;
     --upload) UPLOAD=true;;
@@ -211,7 +217,10 @@ fi
 trap -- on_exit EXIT
 trap -- on_interrupt INT
 cleanup
-rm -rf dist build pyloc.egg-info
+if $CLEAN
+then
+  rm -rf dist build pyloc.egg-info .tox
+fi
 
 ### Tag repository
 remove_tag

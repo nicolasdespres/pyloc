@@ -77,6 +77,32 @@ How to make a release
 #. Visit ``https://testpypi.python.org/pypi/pyloc/$VERSION`` and check
    that all looks good.
 
+#. Test that installation is ok form ``pypitest``:
+
+   .. code:: bash
+
+       $ PYENV_VERSION=2.7.11 virtualenv testinstall2
+       $ cd testinstall2
+       $ source bin/activate
+       $ pip install --index-url https://testpypi.python.org/pypi --ignore-installed 'pyloc==$VERSION'
+       $ rehash
+       $ pyloc --version  # check version and revision is correct
+       $ pyloc2 --version # check version and revision is correct
+       $ deactivate
+       $ cd ..
+       $ rm -rf testinstall2
+
+       $ PYENV_VERSION=3.5.1 virtualenv testinstall3
+       $ cd testinstall3
+       $ source bin/activate
+       $ pip install --index-url https://testpypi.python.org/pypi --ignore-installed 'pyloc==$VERSION'
+       $ rehash
+       $ pyloc --version  # check version and revision is correct
+       $ pyloc3 --version # check version and revision is correct
+       $ deactivate
+       $ cd ..
+       $ rm -rf testinstall2
+
 #. Make the release:
 
    .. code:: bash

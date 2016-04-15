@@ -23,19 +23,16 @@
 #  --push
 #   Push tags and local commit to origin. If not set, nothing is pushed.
 #
-#  --upload
-#   Do not upload release file to the remote repository set by --repo.
+#  --upload=<reponame>
+#   Upload release file to the remote repository <reponame>. Must match
+#   one of the index servers listed in your ~/.pypirc file. Typically,
+#   this is either 'pypi' or 'pypitest'.
 #
 #  --no-test
 #   Do not run test suite as a prelude.
 #
 #  --no-distcheck
 #   Do not run distcheck script for release archive.
-#
-#  --repo=<reponame>
-#   Set the pypi repository to use. Must match one of the index servers
-#   listed in your ~/.pypirc file. Typically, this is either 'pypi' or
-#   'pypitest'. Default is 'pypi'.
 #
 #  --tag-msg=<message_filename>
 #   Use the message contained in <message_filename> as tag message.
@@ -148,10 +145,9 @@ indirect()
 # ========================== #
 
 PUSH=false
-UPLOAD=false
+UPLOAD=''
 NO_TEST=false
 NO_DISTCHECK=false
-PYPI_REPO=pypi
 NO_MASTER=false
 CLEAN=false
 TAG_MSG_FILE=
@@ -162,10 +158,9 @@ do
     --clean) CLEAN=true;;
     --no-master) NO_MASTER=true;;
     --push) PUSH=true;;
-    --upload) UPLOAD=true;;
+    --upload) PYPI_REPO=$(sed -e 's/^--push=//' <<< "$arg");;
     --no-test) NO_TEST=true;;
     --no-distcheck) NO_DISTCHECK=true;;
-    --repo=*) PYPI_REPO=$(sed -e 's/^--repo=//' <<< "$arg");;
     --tag-msg=*) TAG_MSG_FILE=$(sed -e 's/^--tag-msg=//' <<< "$arg");;
     -h|--help) usage; exit 1;;
     -*) fatal "unknown option '$arg'";;
@@ -300,10 +295,10 @@ then
 fi
 
 ### Upload
-if $UPLOAD
+if [ -n "$UPLOAD" ]
 then
   pip install --upgrade twine
   # We use twine to upload because it uses an encrypted connection
   # protecting the username/password whereas setuptools do not.
-  twine upload -r $PYPI_REPO $SDIST_PKGS $WHEEL2_PKGS $WHEEL3_PKGS
+  twine upload -r $UPLOAD $SDIST_PKGS $WHEEL2_PKGS $WHEEL3_PKGS
 fi

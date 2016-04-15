@@ -158,7 +158,7 @@ do
     --clean) CLEAN=true;;
     --no-master) NO_MASTER=true;;
     --push) PUSH=true;;
-    --upload=*) UPLOAD=$(sed -e 's/^--push=//' <<< "$arg");;
+    --upload=*) UPLOAD=$(sed -e 's/^--upload=//' <<< "$arg");;
     --no-test) NO_TEST=true;;
     --no-distcheck) NO_DISTCHECK=true;;
     --tag-msg=*) TAG_MSG_FILE=$(sed -e 's/^--tag-msg=//' <<< "$arg");;

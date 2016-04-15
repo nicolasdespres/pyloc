@@ -72,6 +72,9 @@ How to make a release
 
        $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypitest --upload $VERSION
 
+#. Visit ``https://testpypi.python.org/pypi/pyloc/$VERSION`` and check
+   that all looks good.
+
 #. Make the release:
 
    .. code:: bash

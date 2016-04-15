@@ -77,17 +77,24 @@ How to make a release
 #. Visit ``https://testpypi.python.org/pypi/pyloc/$VERSION`` and check
    that all looks good.
 
-#. Test that installation is ok form ``pypitest``:
+#. Test that installation is ok from ``pypitest``:
 
    .. code:: bash
 
-       $ ./script/test-install.sh 2.7.11 https://pypi.python.org/simple 0.2.0 /tmp/testinstall2
-       $ ./script/test-install.sh 3.5.1 https://pypi.python.org/simple 0.2.0 /tmp/testinstall3
+       $ ./script/test-install.sh 2.7.11 https://testpypi.python.org/pypi 0.2.0 /tmp/testinstall2
+       $ ./script/test-install.sh 3.5.1 https://testpypi.python.org/pypi 0.2.0 /tmp/testinstall3
 
 #. Make the release:
 
    .. code:: bash
 
        $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --upload=pypi --push $VERSION
+
+#. Test that installation is ok from ``pypi``:
+
+   .. code:: bash
+
+       $ ./script/test-install.sh 2.7.11 https://pypi.python.org/simple 0.2.0 /tmp/testinstall2
+       $ ./script/test-install.sh 3.5.1 https://pypi.python.org/simple 0.2.0 /tmp/testinstall3
 
 #. Unset the ``VERSION`` shell variable.

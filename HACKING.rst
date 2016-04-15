@@ -81,27 +81,8 @@ How to make a release
 
    .. code:: bash
 
-       $ PYENV_VERSION=2.7.11 virtualenv testinstall2
-       $ cd testinstall2
-       $ source bin/activate
-       $ pip install --index-url https://testpypi.python.org/pypi --ignore-installed 'pyloc==$VERSION'
-       $ rehash
-       $ pyloc --version  # check version and revision is correct
-       $ pyloc2 --version # check version and revision is correct
-       $ deactivate
-       $ cd ..
-       $ rm -rf testinstall2
-
-       $ PYENV_VERSION=3.5.1 virtualenv testinstall3
-       $ cd testinstall3
-       $ source bin/activate
-       $ pip install --index-url https://testpypi.python.org/pypi --ignore-installed 'pyloc==$VERSION'
-       $ rehash
-       $ pyloc --version  # check version and revision is correct
-       $ pyloc3 --version # check version and revision is correct
-       $ deactivate
-       $ cd ..
-       $ rm -rf testinstall2
+       $ ./script/test-install.sh 2.7.11 https://pypi.python.org/simple 0.2.0 /tmp/testinstall2
+       $ ./script/test-install.sh 3.5.1 https://pypi.python.org/simple 0.2.0 /tmp/testinstall3
 
 #. Make the release:
 

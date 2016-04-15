@@ -77,3 +77,5 @@ How to make a release
    .. code:: bash
 
        $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypi --upload --push $VERSION
+
+#. Unset the ``VERSION`` shell variable.

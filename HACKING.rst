@@ -68,6 +68,8 @@ How to make a release
 #. Make a test release on testpypi.python.org server and check that it
    is ok (mainly the information text should be well formatted).
 
+   **Make sure the ``--push`` flag is not set and the repo is ``pypitest``**
+
    .. code:: bash
 
        $ ./release.sh --tag-msg=/tmp/pyloc.tagmsg --repo=pypitest --upload $VERSION

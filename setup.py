@@ -70,7 +70,9 @@ def sed_i(script, *filepaths):
     cmd = [ "sed", "-i", '', "-e", script ] + list(filepaths)
     subprocess.check_call(cmd)
 
-def rm_f(path):
+def rm_f(path, verbose=False):
+    if verbose:
+        print("remove %s"%(path,))
     try:
         os.unlink(path)
     except OSError as e:
@@ -102,10 +104,8 @@ def inject_version_info():
     finally:
         print("restore %s"%(pyloc_py,))
         subprocess.check_call(["git", "checkout", pyloc_py])
-        print("remove %s"%(VERSION_TXT,))
-        rm_f(VERSION_TXT)
-        print("remove %s"%(REVISION_TXT,))
-        rm_f(REVISION_TXT)
+        rm_f(VERSION_TXT, verbose=True)
+        rm_f(REVISION_TXT, verbose=True)
 
 class SDistProxy(sdist):
     """Hook sdist command"""

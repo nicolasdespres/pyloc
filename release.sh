@@ -234,7 +234,7 @@ log "Release version is: ${GIT_VERSION}"
 
 ### Check previous release is older
 PREV_VERSION=$(python "$SCRIPT_DIR/version" get --from-commit 'HEAD^')
-log "Check previsous version '$PREV_VERSION' older than '$GIT_VERSION'"
+log "Check previous version '$PREV_VERSION' older than '$GIT_VERSION'"
 python <<EOF
 from pkg_resources import parse_version
 assert parse_version('$PREV_VERSION') < parse_version('$GIT_VERSION')

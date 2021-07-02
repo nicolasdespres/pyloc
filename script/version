@@ -76,7 +76,7 @@ def py_version():
     return "{pyv.major}.{pyv.minor}.{pyv.micro}".format(pyv=sys.version_info)
 
 def check_version(string):
-    pattern = r"^pyloc \d+.\d+\.\d+(rc\d+|-\d+)?(-dirty)? "\
+    pattern = r"^pyloc \d+\.\d+\.\d+(rc\d+|-\d+)?(-dirty)? "\
               "on python %(py_version)s "\
               "\(rev: [0-9a-f]{6,40}\)\n"\
               %{'py_version': py_version(),}

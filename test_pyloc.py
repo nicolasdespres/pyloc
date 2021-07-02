@@ -556,7 +556,7 @@ class TestPyloc(unittest.TestCase, CompatAssert):
                                  qualname="C.Point",
                                  locs=(3, 4))
 
-    def test_class_nested_namedtuple(self):
+    def test_class_nested_namedtuple2(self):
         modcontent = textwrap.dedent(
             """\
             from collections import namedtuple
